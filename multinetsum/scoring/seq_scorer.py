@@ -49,6 +49,6 @@ class SeqScorer(Scorer):
             if self.input is None:
                 self.input = lstm_output
             else:
-                self.input = tf.concat((self.input, tstm_output), axis=1)
+                self.input = tf.concat((self.input, lstm_output), axis=1)
 
         return self
