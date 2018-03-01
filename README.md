@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2-0BDA51.svg?style=plastic)](http://www.apache.org/licenses/LICENSE-2.0)
 
 
-MultiNetSum: MultiLingual Summarizer
+DeepMultiLSum: MultiLingual Summarizer
 
 
 
