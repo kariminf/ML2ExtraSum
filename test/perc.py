@@ -105,71 +105,29 @@ if __name__ == '__main__':
 		sumXCell = tf.contrib.rnn.LSTMCell(2,num_proj=2)
 		outX,_ = tf.nn.dynamic_rnn(sumXCell,x_,dtype=tf.float32)   #shape: (None, 12, 2)
 
-
-
 	with tf.variable_scope("lstm2"):
 		sumYCell = tf.contrib.rnn.LSTMCell(2, num_proj=2)
 		outY,_ = tf.nn.dynamic_rnn(sumYCell,y_,dtype=tf.float32)   #shape: (None, 12, 2)
 
-
-	#print z_.get_shape()
-
-	predX = get_output(outX)
-	predY = get_output(outY)
-
 	predXS = tf.reduce_sum(outX)
 
-	outXY = tf.concat((predX, predY, z_), axis=1)
+	outXY = tf.concat((get_output(outX), get_output(outY), z_), axis=1)
 
+	output = tf.layers.dense(outXY, units=10, activation=tf.nn.tanh)
 
+	output = tf.layers.dense(output, units=1, activation=tf.nn.tanh)
 
-	#exit()
+	cost = tf.losses.mean_squared_error(r_, output)
 
-	#inXYZ = tf.concat((outXY, z_), axis=0)
-
-	theta1 = tf.Variable(tf.random_uniform([5,10], -1, 1), name="theta1")
-	bias1 = tf.Variable(tf.zeros([10]), name="bias1")
-
-	theta2 = tf.Variable(tf.random_uniform([10,1], -1, 1), name="theta2")
-	bias2 = tf.Variable(tf.zeros([1]), name="bias2")
-
-	layer1 = tf.tanh(tf.matmul(outXY, theta1) + bias1) #x_
-	output = tf.tanh(tf.matmul(layer1, theta2) + bias2)
-
-	output = tf.add(output, 1)
-	output = tf.multiply(output, 0.5)
-
-	cost = - tf.reduce_mean( (r_ * tf.log(output)) + (1 - r_) * tf.log(1.0 - output)  )
 	train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
 
 	init = tf.global_variables_initializer()
 	sess = tf.Session()
 	sess.run(init)
 
-	saver = tf.train.Saver()
-
-
-	"""
-	print ("shape of X is ", sess.run(tf.shape(X)))
-
-	ox = sess.run(outX, feed_dict={x_: X})
-	oy = sess.run(outY, feed_dict={y_: Y})
-	oxy = sess.run(outXY, feed_dict={outX: ox, outY: oy, z_: Z})
-
-
-	print oxy
-
-
-	exit()
-
-	"""
+	#saver = tf.train.Saver()
 
 	for i in range(10000):
-		"""
-		ox = sess.run(outX, feed_dict={x_: X})
-		oy = sess.run(outY, feed_dict={y_: Y})
-		oxy = sess.run(outXY, feed_dict={outX: ox, outY: oy, z_: Z})
-		"""
 		_, cst, px = sess.run([train_step, cost, predXS], feed_dict={x_: X, y_: Y, z_: Z , r_: RESULT})
 		print i, cst, px
 		#sess.run(train_step, feed_dict={x_: X, y_: Y, z_: Z, r_: RESULT})

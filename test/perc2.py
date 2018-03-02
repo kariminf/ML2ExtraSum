@@ -29,7 +29,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from multinetsum.scoring.seq_scorer import SeqScorer
+from deepmultilsum.scoring.seq_scorer import SeqScorer
 
 import tensorflow as tf
 import numpy as np
@@ -105,14 +105,12 @@ if __name__ == '__main__':
 
     graph.add_input(z_)
 
-    graph.add_layer(10).create(1)
+    graph.add_layer(10, tf.nn.tanh).add_layer(1, tf.nn.tanh)
 
     output = graph.get_output()
 
-    output = tf.add(output, 1)
-    output = tf.multiply(output, 0.5)
-
-    cost = - tf.reduce_mean( (r_ * tf.log(output)) + (1 - r_) * tf.log(1.0 - output)  )
+    cost = tf.losses.mean_squared_error(r_, output)
+	
     train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
 
     init = tf.global_variables_initializer()

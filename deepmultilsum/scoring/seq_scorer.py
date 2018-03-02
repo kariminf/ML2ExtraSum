@@ -20,7 +20,8 @@
 #
 
 import tensorflow as tf
-from multinetsum.scoring.scorer import Scorer
+#from deepmultilsum.scoring.scorer import Scorer
+from scorer import Scorer
 
 def transform_output(net):
     batch_size = tf.shape(net)[0]
@@ -31,24 +32,18 @@ def transform_output(net):
     return tf.gather(flat, index)
 
 class SeqScorer(Scorer):
+
     def __init__(self, name):
         super(SeqScorer, self).__init__(name)
         self.lstm_nbr = 0
 
-    def add_LSTM_input(self, input, nbr_noads, nbr_outputs):
-
-        if not self.inputOn:
-            return self
-
+    def add_LSTM_input(self, input, nbr_noads, nbr_outputs, activation=tf.nn.tanh):
         scope = self.name + "_lstm" + str(self.lstm_nbr)
         self.lstm_nbr += 1
         with tf.variable_scope(scope):
             lstm = tf.contrib.rnn.LSTMCell(nbr_noads ,num_proj=nbr_outputs)
             layer,_ = tf.nn.dynamic_rnn(lstm, input, dtype=tf.float32)
             lstm_output = transform_output(layer)
-            if self.input is None:
-                self.input = lstm_output
-            else:
-                self.input = tf.concat((self.input, lstm_output), axis=1)
+            self.add_input(lstm_output)
 
         return self
