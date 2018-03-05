@@ -24,14 +24,13 @@
 
 import tensorflow as tf
 
-import os
+#import os
 import sys
+sys.path.insert(0, "..")
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from ml2extrasum.scoring.seq_scorer import SeqScorer
 
-from deepmultilsum.scoring.seq_scorer import SeqScorer
-
-import tensorflow as tf
 import numpy as np
 
 DATA = [
@@ -110,7 +109,7 @@ if __name__ == '__main__':
     output = graph.get_output()
 
     cost = tf.losses.mean_squared_error(r_, output)
-	
+
     train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
 
     init = tf.global_variables_initializer()

@@ -1,13 +1,14 @@
-# MultiNetSum
+# (ML)<sub>2</sub> ExtraSum
 
-[![Project](https://img.shields.io/badge/Project-MultiNetSum-0BDA51.svg?style=plastic)](https://github.com/kariminf/MultiNetSum)
-[![Type](https://img.shields.io/badge/Type-Research-0BDA51.svg?style=plastic)](https://github.com/kariminf/MultiNetSum)
+[![Project](https://img.shields.io/badge/Project-ML2ExtraSum-0BDA51.svg?style=plastic)](https://github.com/kariminf/ML2ExtraSum)
+[![Type](https://img.shields.io/badge/Type-Research-0BDA51.svg?style=plastic)](https://github.com/kariminf/ML2ExtraSum)
 [![License](https://img.shields.io/badge/License-Apache_2-0BDA51.svg?style=plastic)](http://www.apache.org/licenses/LICENSE-2.0)
 
 
-DeepMultiLSum: MultiLingual Summarizer
+(ML)<sub>2</sub> ExtraSum: **M**achine **L**earning based **M**ulti**L**ingual **Extra**ctive **Sum**marizer
 
-
+## TO BE CONTINUED
+Someday ... If I'm not dead by then :)
 
 ## License
 Copyright (C) 2018 Abdelkrime Aries

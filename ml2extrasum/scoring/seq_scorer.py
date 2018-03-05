@@ -37,12 +37,17 @@ class SeqScorer(Scorer):
         super(SeqScorer, self).__init__(name)
         self.lstm_nbr = 0
 
-    def add_LSTM_input(self, input, nbr_noads, nbr_outputs, activation=tf.nn.tanh):
+    def add_LSTM_input(self, input, hidden_size, num_layers = 1, num_proj = None, activation=tf.nn.tanh):
         scope = self.name + "_lstm" + str(self.lstm_nbr)
         self.lstm_nbr += 1
         with tf.variable_scope(scope):
-            lstm = tf.contrib.rnn.LSTMCell(nbr_noads ,num_proj=nbr_outputs)
-            layer,_ = tf.nn.dynamic_rnn(lstm, input, dtype=tf.float32)
+            lstms = [tf.contrib.rnn.LSTMCell(hidden_size) for _ in range(num_layers-1)]
+            if num_proj is None:
+                lstms.append(tf.contrib.rnn.LSTMCell(hidden_size))
+            else:
+                lstms.append(tf.contrib.rnn.LSTMCell(hidden_size, num_proj=num_proj))
+            multi_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(lstms)
+            layer,_ = tf.nn.dynamic_rnn(multi_rnn_cell, input, dtype=tf.float32)
             lstm_output = transform_output(layer)
             self.add_input(lstm_output)
 
