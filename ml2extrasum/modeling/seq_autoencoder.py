@@ -24,48 +24,67 @@ sys.path.insert(0,'../')
 
 from model import Model
 
+from ml2extrasum.scoring.scorer import Scorer
+from ml2extrasum.scoring.seq_scorer import SeqScorer
+from ml2extrasum.scoring.seq_scorer import transform_output
+
 import tensorflow as tf
 
-from scoring.scorer import Scorer
-from scoring.seq_scorer import SeqScorer
+LSTM_NUM_LAYERS = 2
+LSTM_HID_SIZE = 30
+ENC_NUM_OUT = 5
 
 def get_encoder(name, seq):
     graph = SeqScorer(name)
     #input, hidden_size, num_layers = 1, num_proj, activation=tf.nn.tanh
-    graph.add_LSTM_input(seq, 5, 2)
-    graph.add_layer(5, tf.nn.tanh)
+    graph.add_LSTM_input(seq, LSTM_HID_SIZE, LSTM_NUM_LAYERS)
+    graph.add_layer(ENC_NUM_OUT, tf.nn.tanh)
     return graph.get_output()
 
-def get_decoder(name, vec):
-    graph = Scorer(name + "_l2stm")
+def get_decoder(name, vec, seq_len):
+    graph = Scorer(name)
     graph.add_input(vec)
-    graph.add_input(tfreq)
-    graph.add_input(sim)
-    graph.add_input(size)
-    graph.add_input(pos)
-    graph.add_layer(10, tf.nn.tanh).add_layer(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_layer(1, tf.nn.tanh)
-    return graph.get_output()
+    graph.add_layer(ENC_NUM_OUT, tf.nn.tanh)
+    vec2 = graph.get_output()
+    #initial_state_dec = tuple([(vec2, vec2)] * LSTM_NUM_LAYERS)
+
+    batch_size = tf.shape(vec)[0]
+
+    dec_inputs = tf.zeros([batch_size, seq_len, 1])
+    """
+    dec_inputs = [
+    [[1.0], [2.1], [3.2], [4.3]],
+    [[5.4], [6.5], [7.6], [8.7]]
+    ]
+    dec_inputs = tf.convert_to_tensor(dec_inputs, dtype=tf.float32)
+    """
+    #dec_inputs = tf.mul([tf.zeros([batch_size, 1])], seq_len)
+    #print dec_inputs
+
+    cell_dec = tf.nn.rnn_cell.MultiRNNCell([tf.contrib.rnn.LSTMCell(LSTM_HID_SIZE) for _ in range(LSTM_NUM_LAYERS)])
+
+    initial_state_dec = cell_dec.zero_state(batch_size, dtype=tf.float32)
+
+    output, _ = tf.nn.dynamic_rnn(cell_dec, inputs=dec_inputs, initial_state=initial_state_dec, dtype=tf.float32)
+
+    #batch_range = tf.range(batch_size)
+    #seq_range = tf.range(seq_len)
+    #indices = tf.stack([batch_range, seq_range, [LSTM_HID_SIZE - 1]], axis=0)
+
+    return output[:,:, -1]
 
 
 class SeqAutoEncoder(Model):
 
-    def __init__(self,
-                doc_tf_seq,
-                doc_sim_seq,
-                doc_size_seq,
-                doc_size,
-                sent_tf_seq,
-                sent_sim_seq,
-                sent_size,
-                sent_pos):
-        super(StatNet, self).__init__()
+    def __init__(self, name, seq):
+        super(SeqAutoEncoder, self).__init__()
 
-        lang_scorer = get_language_scorer("lang_scorer", doc_tf_seq, doc_sim_seq, doc_size_seq)
+        #sequence length
+        self.seq_len = tf.shape(seq)[1]
+        #self.seq_len = 4
 
-        tf_scorer = get_tf_sim_scorer("tf_scorer", lang_scorer, sent_tf_seq, doc_tf_seq)
-        sim_scorer = get_tf_sim_scorer("sim_scorer", lang_scorer, sent_sim_seq, doc_sim_seq)
-        size_scorer = get_size_scorer("size_scorer", lang_scorer, sent_size, doc_size_seq)
-        pos_scorer = get_position_scorer("pos_scorer", lang_scorer, sent_pos, doc_size)
+        self.latent = get_encoder(name + ".encoder", seq)
+        self.graph = get_decoder(name + ".decoder", self.latent, self.seq_len)
 
-        self.graph = get_sentence_scorer("sent_scorer", lang_scorer, tf_scorer, sim_scorer, size_scorer, pos_scorer)
+    def get_latent(self):
+        return self.latent

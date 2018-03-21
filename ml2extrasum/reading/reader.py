@@ -30,11 +30,28 @@ def get_docs_max_sim_length(lang_url):
 def get_doc_sim_vector(doc_url):
     json_url = os.path.join(doc_url, "docInfo.json")
     doc_info = json.load(open(json_url))
-    return doc_info["sims"]
+    sims = doc_info["sims"]
+    sims = zip(*[sims*1])
+    return sims
+
+def extend(vector, max_len):
+    diff = max_len - len(vector)
+    if diff <= 0:
+        return
+    for _ in range(diff):
+        vector.append([0.0])
 
 
 def get_doc_sim_lang (lang_url):
     max_len = get_docs_max_sim_length(lang_url)
+    doc_sim_lang = None
     for f in os.listdir(lang_url):
         d = os.path.join(lang_url, f)
         if os.path.isdir(d):
+            doc_sim = get_doc_sim_vector(d)
+            extend(doc_sim, max_len)
+            if doc_sim_lang == None:
+                doc_sim_lang = [doc_sim]
+            else:
+                doc_sim_lang.append(doc_sim)
+    return doc_sim_lang
