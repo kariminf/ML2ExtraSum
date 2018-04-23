@@ -19,10 +19,15 @@
 # limitations under the License.
 #
 
+import os
 import tensorflow as tf
 from modeling.stat_net import StatNet
+from reading import reader
 
 #
+
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
+TRAIN_ITER = 2
 
 #Inputs holders
 doc_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
@@ -42,3 +47,34 @@ output = model.get_graph()
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
+
+saver = tf.train.Saver()
+
+batch = {}
+
+for f in os.listdir(dataset_url):
+    lang_url = os.path.join(dataset_url, f)
+    if os.path.isdir(lang_url):
+        print "reading ", f
+        batch[f]["doc_tf_seq"] = reader.get_doc_tf_lang(lang_dir)
+        batch[f]["doc_sim_seq"] = reader.get_doc_sim_lang(lang_dir)
+        batch[f]["doc_size_seq"] = reader.get_doc_sizes_lang(lang_dir)
+        batch[f]["doc_size"] = reader.get_doc_size_lang(lang_dir)
+
+        batch[f]["sent_tf_seq"] = reader.get_sent_tf_lang(lang_dir)
+        
+        sent_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
+        sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
+        sent_pos_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
+
+        doc_sim_seq = reader.get_doc_sim_lang(lang_url)
+        batch[f] = doc_sim_seq
+
+for i in range(TRAIN_ITER):
+    for lang_dir in os.listdir(STATS_DIR):
+        lang_dir = os.path.join(STATS_DIR, lang_dir)
+        if os.path.isdir(lang_dir):
+
+
+    _, cst = sess.run([train_step, cost], feed_dict={x_: X, y_: Y, z_: Z , r_: RESULT})
+    print i, cst
