@@ -26,8 +26,10 @@ import numpy
 
 sys.path.insert(0, "..")
 
-from ml2extrasum.reading import reader
+from ml2extrasum.reading.reader import Reader
 
-m = reader.get_doc_sim_lang("/home/kariminf/Data/ATS/Mss15Train/stats/ar/")
+r = Reader("/home/kariminf/Data/ATS/Mss15Train/stats/")
+r.set_lang("ar")
+m = r.get_doc_sim_lang()
 
 print numpy.shape(m)
