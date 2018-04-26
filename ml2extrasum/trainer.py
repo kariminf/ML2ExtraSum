@@ -30,13 +30,22 @@ STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
 TRAIN_ITER = 2
 
 #Inputs holders
+#===============
+# term frequencies in document
 doc_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
+# all sentences similarities in a document
 doc_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_sim_seq_in")
+# all sentences sizes in a document
 doc_size_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_size_seq_in")
+# document size
 doc_size_ = tf.placeholder(tf.float32, shape=[None,1], name="doc_size_in")
+# term frequencies (in the document) of a sentence
 sent_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+# similarities of this sentence with others
 sent_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
+# sentence size
 sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
+# sentence position
 sent_pos_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
 
 model = StatNet(doc_tf_seq_, doc_sim_seq_, doc_size_seq_, doc_size_, \
@@ -62,7 +71,7 @@ for f in os.listdir(dataset_url):
         batch[f]["doc_size"] = reader.get_doc_size_lang(lang_dir)
 
         batch[f]["sent_tf_seq"] = reader.get_sent_tf_lang(lang_dir)
-        
+
         sent_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
         sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
         sent_pos_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
