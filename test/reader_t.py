@@ -23,6 +23,7 @@
 
 import sys
 import numpy
+import pytest
 
 sys.path.insert(0, "..")
 
@@ -30,6 +31,23 @@ from ml2extrasum.reading.reader import Reader
 
 r = Reader("/home/kariminf/Data/ATS/Mss15Train/stats/")
 r.set_lang("ar")
-m = r.get_doc_sim_lang()
 
-print numpy.shape(m)
+def test_get_doc_sim_lang():
+    assert r.get_docs_max_sim_length() == 29869
+    m = r.get_doc_sim_lang()
+    assert numpy.shape(m) == (30, 29869, 1)
+
+def test_get_doc_tf_lang():
+    assert r.get_docs_max_tf_length() == 1377
+    m = r.get_doc_tf_lang()
+    assert numpy.shape(m) == (30, 1377, 1)
+
+def test_get_doc_sizes_lang():
+    assert r.get_docs_max_sizes_length() == 321
+    m = r.get_doc_sizes_lang()
+    assert numpy.shape(m) == (30, 321, 1)
+
+def test_get_sents_tf_lang():
+    assert r.get_sents_max_tf_length() == 202
+    m = r.get_sents_tf_lang()
+    assert numpy.shape(m) == (30, 202, 1)

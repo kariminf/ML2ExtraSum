@@ -22,8 +22,9 @@
 import os
 import json
 import reader
+from reader import Reader
 
-DOC_SIM_LIMIT = 200
+DOC_SIM_LIMIT = 3
 SENT_SIM_LIMIT = 50
 
 DOC_TF_LIMIT = 200
@@ -31,48 +32,26 @@ SENT_TF_LIMIT = 50
 
 DOC_SIZE_LIMIT = 100
 
-class LimitedReader(reader.Reader):
-    def __init__(self, url):
-        self.url = url
+def list_to_size(vector, limit):
+    vector.sort(reverse=True)
+    vector = vector[:limit]
+    reader.extend(vector, limit)
+    return vector
 
-# ====================================================
+class LimitedReader(Reader):
 
-def list_to_size(list, limit):
-    list.sort(reverse=True)
-    list = list[:limit]
-    extend(list, limit)
+    def get_doc_sim_vector(self, doc):
+        sims = self.get_vector(doc + "/docInfo.json", "sims")
+        return list_to_size(sims, DOC_SIM_LIMIT)
 
-# ====================================================
+    def get_doc_tf_vector(self, doc):
+        freqs = self.get_vector(doc + "/docInfo.json", "freqs")
+        return list_to_size(freqs, DOC_TF_LIMIT)
 
-def get_doc_sim_vector(doc_url):
-    sims = reader.get_doc_sim_vector(doc_url)
-    list_to_size(sims, DOC_SIM_LIMIT)
-    return sims
+    def get_doc_sizes_vector(self, doc):
+        sizes = self.get_vector(doc + "/docInfo.json", "sizes")
+        return list_to_size(sizes, DOC_SIZE_LIMIT)
 
-# ====================================================
-
-def get_doc_tf_vector(doc_url):
-    freqs = reader.get_doc_tf_vector(doc_url)
-    list_to_size(freqs, DOC_TF_LIMIT)
-    return freqs
-
-# ====================================================
-
-def get_doc_sizes_vector(doc_url):
-    sizes = reader.get_doc_sizes_vector(doc_url)
-    list_to_size(sizes, DOC_SIZE_LIMIT)
-    return sizes
-
-# ====================================================
-
-def get_sents_tf_vector(doc_url):
-    freqs = reader.get_sents_tf_vector(doc_url)
-    list_to_size(freqs, SENT_TF_LIMIT)
-    return freqs
-
-# ====================================================
-
-def get_sents_sim_vector(doc_url):
-    sims = reader.get_sents_sim_vector(doc_url)
-    list_to_size(sims, SENT_SIM_LIMIT)
-    return sims
+    def get_sents_tf_vector(self, doc):
+        freqs = self.get_vector(doc + "/sentTF.json", "freqs")
+        return list_to_size(freqs, SENT_SIM_LIMIT)

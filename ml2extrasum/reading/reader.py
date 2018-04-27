@@ -41,7 +41,57 @@ class Reader(object):
     def get_file_url(self, fname):
         return os.path.join(self.lang_url, fname)
 
-    def create_lang_list (self, func):
+    def get_max_length(self, property):
+        json_url = self.get_file_url("lang.json")
+        lang_properties = json.load(open(json_url))
+        return int(lang_properties[property])
+
+    def get_docs_max_sim_length(self):
+        return self.get_max_length("maxDocSimLength")
+
+    def get_docs_max_tf_length(self):
+        return self.get_max_length("maxDocTFLength")
+
+    def get_docs_max_sizes_length(self):
+        return self.get_max_length("maxDocSizesLength")
+
+    def get_sents_max_tf_length(self):
+        return self.get_max_length("maxSentTFLength")
+
+    def get_property(self, file, property):
+        json_url = self.get_file_url(file)
+        cont = json.load(open(json_url))
+        return cont[property]
+
+    def get_vector(self, file, property):
+        vec = self.get_property(file, property)
+        vec = zip(*[vec*1]) # delete 1s
+        return vec
+
+    def get_doc_sim_vector(self, doc):
+        sims = self.get_vector(doc + "/docInfo.json", "sims")
+        extend(sims, self.get_docs_max_sim_length())
+        return sims
+
+    def get_doc_tf_vector(self, doc):
+        freqs = self.get_vector(doc + "/docInfo.json", "freqs")
+        extend(freqs, self.get_docs_max_tf_length())
+        return freqs
+
+    def get_doc_sizes_vector(self, doc):
+        sizes = self.get_vector(doc + "/docInfo.json", "sizes")
+        extend(sizes, self.get_docs_max_sizes_length())
+        return sizes
+
+    def get_sents_tf_vector(self, doc):
+        freqs = self.get_vector(doc + "/sentTF.json", "freqs")
+        extend(freqs, self.get_docs_max_tf_length())
+        return freqs
+
+    def get_doc_size(self, doc):
+        return [self.get_property(doc + "/docInfo.json", "size")]
+
+    def create_lang_list(self, func):
         lang_list = None
         for f in os.listdir(self.lang_url):
             d = os.path.join(self.lang_url, f)
@@ -53,91 +103,17 @@ class Reader(object):
                     lang_list.append(vec)
         return lang_list
 
-    def get_vector(self, file, property):
-        json_url = self.get_file_url(file)
-        cont = json.load(open(json_url))
-        vec = cont[property]
-        vec = zip(*[vec*1]) # delete 1s
-        return vec
-
-    def get_max_length(self, file, property):
-        json_url = self.get_file_url(file)
-        lang_properties = json.load(open(json_url))
-        return int(lang_properties[property])
-
-    def get_docs_max_sim_length(self):
-        return self.get_max_length("lang.json", "maxDocSimLength")
-
-    def get_doc_sim_vector(self, doc):
-        sims = self.get_vector(doc + "/docInfo.json", "sims")
-        extend(sims, self.get_docs_max_sim_length())
-        return sims
+    def get_doc_tf_lang(self):
+        return self.create_lang_list(self.get_doc_tf_vector)
 
     def get_doc_sim_lang(self):
         return self.create_lang_list(self.get_doc_sim_vector)
 
-    def get_docs_max_tf_length():
-        return self.get_max_length("lang.json", "maxDocTFLength")
-
-    def get_doc_tf_vector(doc):
-        freqs = self.get_vector(doc + "/docInfo.json", "freqs")
-        extend(freqs, self.get_docs_max_tf_length())
-        return freqs
-
-    def get_doc_tf_lang ():
-        return self.create_lang_list(self.get_doc_tf_vector)
-
-    def get_docs_max_sizes_length(lang_url):
-        return self.get_max_length("lang.json", "maxDocSizesLength")
-
-    def get_doc_sizes_vector(doc):
-        sizes = self.get_vector(doc + "/docInfo.json", "sizes")
-        extend(sizes, self.get_docs_max_sizes_length())
-        return sizes
-
-    def get_doc_sizes_lang (lang_url):
+    def get_doc_sizes_lang(self):
         return self.create_lang_list(self.get_doc_sizes_vector)
 
-    def get_doc_size(doc_url):
-        json_url = os.path.join(doc_url, "docInfo.json")
-        doc_info = json.load(open(json_url))
-        size = doc_info["size"]
-        return size
+    def get_sents_tf_lang(self):
+        return self.create_lang_list(self.get_sents_tf_vector)
 
-    def get_doc_size_lang (lang_url):
-        doc_size_lang = None
-        for f in os.listdir(lang_url):
-            d = os.path.join(lang_url, f)
-            if os.path.isdir(d):
-                doc_size = get_doc_size(d)
-                if doc_size_lang == None:
-                    doc_size_lang = [[doc_size]]
-                else:
-                    doc_size_lang.append([doc_size])
-        return doc_size_lang
-
-    def get_sents_max_tf_length(lang_url):
-        json_url = os.path.join(lang_url, "lang.json")
-        lang_properties = json.load(open(json_url))
-        return int(lang_properties["maxSentTFLength"])
-
-    def get_sents_tf_vector(doc_url):
-        json_url = os.path.join(doc_url, "sentTF.json")
-        doc_info = json.load(open(json_url))
-        freqs = doc_info["freqs"]
-        freqs = zip(*[freqs*1])
-        return freqs
-
-    def get_sents_tf_lang (lang_url):
-        max_len = get_sents_max_tf_length(lang_url)
-        doc_tf_lang = None
-        for f in os.listdir(lang_url):
-            d = os.path.join(lang_url, f)
-            if os.path.isdir(d):
-                doc_tf = get_doc_tf_vector(d)
-                extend(doc_tf, max_len)
-                if doc_tf_lang == None:
-                    doc_tf_lang = [doc_tf]
-                else:
-                    doc_tf_lang.append(doc_tf)
-        return doc_tf_lang
+    def get_doc_size_lang (self):
+        return self.create_lang_list(self.get_doc_size)
