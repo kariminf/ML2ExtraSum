@@ -1,6 +1,0 @@
-[
-  "reader_t.py::test_get_doc_sim_lang", 
-  "reader_t.py::test_get_doc_tf_lang", 
-  "reader_t.py::test_get_doc_sizes_lang", 
-  "reader_t.py::test_get_sents_tf_lang"
-]
