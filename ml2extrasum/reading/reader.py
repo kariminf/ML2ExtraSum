@@ -29,6 +29,11 @@ def extend(vector, max_len):
     for _ in range(diff):
         vector.append([0.0])
 
+def append_list(parent, child):
+    if parent == None:
+        parent = [child]
+    else:
+        parent.append(child)
 
 class Reader(object):
 
@@ -65,27 +70,28 @@ class Reader(object):
 
     def get_vector(self, file, property):
         vec = self.get_property(file, property)
-        vec = zip(*[vec*1]) # delete 1s
+        vec.sort(reverse=True)
+        vec = zip(*[vec*1])
         return vec
 
     def get_doc_sim_vector(self, doc):
         sims = self.get_vector(doc + "/docInfo.json", "sims")
-        extend(sims, self.get_docs_max_sim_length())
+        #extend(sims, self.get_docs_max_sim_length())
         return sims
 
     def get_doc_tf_vector(self, doc):
         freqs = self.get_vector(doc + "/docInfo.json", "freqs")
-        extend(freqs, self.get_docs_max_tf_length())
+        #extend(freqs, self.get_docs_max_tf_length())
         return freqs
 
     def get_doc_sizes_vector(self, doc):
         sizes = self.get_vector(doc + "/docInfo.json", "sizes")
-        extend(sizes, self.get_docs_max_sizes_length())
+        #extend(sizes, self.get_docs_max_sizes_length())
         return sizes
 
     def get_sents_tf_vector(self, doc):
         freqs = self.get_vector(doc + "/sentTF.json", "freqs")
-        extend(freqs, self.get_docs_max_tf_length())
+        #extend(freqs, self.get_docs_max_tf_length())
         return freqs
 
     def get_doc_size(self, doc):
@@ -117,3 +123,49 @@ class Reader(object):
 
     def get_doc_size_lang (self):
         return self.create_lang_list(self.get_doc_size)
+
+    def process_sents_in_doc(self, doc_path, tf_vec, sim_vec, size_vec, pos_vec, rouge_vec):
+        tf_cont = json.load(open(doc_path + "/sentTF.json"))
+        sim_cont = json.load(open(doc_path + "/sentSim.json"))
+        size_cont = json.load(open(doc_path + "/sentLen.json"))
+        rouge1_cont = json.load(open(doc_path + "/sentRouge1.json"))
+
+        for num in sorted(tf_cont):
+            v = tf_cont[num]
+            v.sort(reverse=True)
+            tf_vec.append(zip(*[v*1]))
+            v = sim_cont[num]
+            v.sort(reverse=True)
+            sim_vec.append(zip(*[v*1]))
+
+            size_vec.append([size_cont[num]])
+            pos_vec.append([num])
+            rouge_vec.append([rouge1_cont[num]])
+
+        return len(tf_cont)
+
+    def create_doc_batch(self):
+        doc_batch = {}
+        for f in os.listdir(self.lang_url):
+            d = os.path.join(self.lang_url, f)
+            if os.path.isdir(d):
+                doc_batch[f] = {}
+                doc_batch[f]["doc_tf_seq"] = self.get_doc_tf_vector(d)
+                doc_batch[f]["doc_sim_seq"] = self.get_doc_sim_vector(d)
+                doc_batch[f]["doc_size_seq"] = self.get_doc_sizes_vector(d)
+
+                tf_vec = []
+                sim_vec = []
+                size_vec = []
+                pos_vec = []
+                rouge_vec = []
+                nbr_sents = self.process_sents_in_doc(d, tf_vec, sim_vec, size_vec, pos_vec, rouge_vec)
+
+                doc_batch[f]["nbr_sents"] = nbr_sents
+                doc_batch[f]["sent_tf_seq"] = tf_vec
+                doc_batch[f]["sent_sim_seq"] = sim_vec
+                doc_batch[f]["sent_size"] = sim_vec
+                doc_batch[f]["sent_pos"] = pos_vec
+                doc_batch[f]["rouge_1"] = rouge_vec
+
+        return doc_batch

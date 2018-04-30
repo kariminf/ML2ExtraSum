@@ -33,7 +33,7 @@ SENT_TF_LIMIT = 50
 DOC_SIZE_LIMIT = 100
 
 def list_to_size(vector, limit):
-    vector.sort(reverse=True)
+    #vector.sort(reverse=True)
     vector = vector[:limit]
     reader.extend(vector, limit)
     return vector

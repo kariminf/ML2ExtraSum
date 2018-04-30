@@ -48,6 +48,8 @@ sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
 # sentence position
 sent_pos_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
 
+rouge_1_ = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
+
 model = StatNet(doc_tf_seq_, doc_sim_seq_, doc_size_seq_, doc_size_, \
                 sent_tf_seq_, sent_sim_seq_, sent_size_, sent_pos_)
 
