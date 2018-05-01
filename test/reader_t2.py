@@ -34,5 +34,10 @@ r.set_lang("ar")
 
 batch = r.create_doc_batch()
 
+#print numpy.shape(batch["0e9a53fb5c84390d9e545048540620df"]["sent_sim_seq"])
+print batch["0e9a53fb5c84390d9e545048540620df"]["sent_sim_seq"]
+
+"""
 with open('data.json', 'w') as fp:
     json.dump(batch, fp)
+"""

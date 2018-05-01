@@ -71,7 +71,7 @@ class Reader(object):
     def get_vector(self, file, property):
         vec = self.get_property(file, property)
         vec.sort(reverse=True)
-        vec = zip(*[vec*1])
+        vec = [[float(i)] for i in vec]
         return vec
 
     def get_doc_sim_vector(self, doc):
@@ -130,17 +130,29 @@ class Reader(object):
         size_cont = json.load(open(doc_path + "/sentLen.json"))
         rouge1_cont = json.load(open(doc_path + "/sentRouge1.json"))
 
+        max_len = max(size_cont.values())
+        print max_len
+
         for num in sorted(tf_cont):
             v = tf_cont[num]
             v.sort(reverse=True)
-            tf_vec.append(zip(*[v*1]))
+            v = [[float(i)] for i in v]
+            extend(v, max_len)
+            tf_vec.append(v)
+
             v = sim_cont[num]
             v.sort(reverse=True)
-            sim_vec.append(zip(*[v*1]))
+            v = [[float(i)] for i in v]
+            extend(v, max_len)
+            sim_vec.append(v)
 
-            size_vec.append([size_cont[num]])
-            pos_vec.append([num])
-            rouge_vec.append([rouge1_cont[num]])
+            size_vec.append([float(size_cont[num])])
+            pos_vec.append([float(num)])
+            rouge_vec.append([float(rouge1_cont[num])])
+
+
+        extend(tf_vec, int(max_len))
+        extend(sim_vec, int(max_len))
 
         return len(tf_cont)
 
@@ -164,7 +176,7 @@ class Reader(object):
                 doc_batch[f]["nbr_sents"] = nbr_sents
                 doc_batch[f]["sent_tf_seq"] = tf_vec
                 doc_batch[f]["sent_sim_seq"] = sim_vec
-                doc_batch[f]["sent_size"] = sim_vec
+                doc_batch[f]["sent_size"] = size_vec
                 doc_batch[f]["sent_pos"] = pos_vec
                 doc_batch[f]["rouge_1"] = rouge_vec
 

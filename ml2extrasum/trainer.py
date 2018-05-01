@@ -28,8 +28,9 @@ from reading.reader import Reader
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
 TRAIN_ITER = 2
+LEARNING_RATE = 0.05
 
 #Inputs holders
 #===============
@@ -85,18 +86,16 @@ for i in range(TRAIN_ITER):
             doc_data = lang_data[doc]
             nbr_sents = doc_data["nbr_sents"]
             feed = {
-
             doc_tf_seq_ : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
             doc_sim_seq_ : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
             doc_size_seq_ : repeat_vector(doc_data["doc_size_seq"], nbr_sents),
             doc_size_ : repeat_vector([nbr_sents], nbr_sents),
-
             sent_tf_seq_ : doc_data["sent_tf_seq"],
             sent_sim_seq_ : doc_data["sent_sim_seq"],
             sent_size_ : doc_data["sent_size"],
             sent_pos_ : doc_data["sent_pos"],
             rouge_1_ : doc_data["rouge_1"]
-
             }
+            print feed[doc_tf_seq_]
             _, cst = sess.run([train_step, cost], feed_dict=feed)
             print i, cst
