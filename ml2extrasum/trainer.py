@@ -20,6 +20,7 @@
 #
 
 import os
+import numpy
 import tensorflow as tf
 from modeling.stat_net import StatNet
 from reading.reader import Reader
@@ -96,6 +97,13 @@ for i in range(TRAIN_ITER):
             sent_pos_ : doc_data["sent_pos"],
             rouge_1_ : doc_data["rouge_1"]
             }
-            print feed[doc_tf_seq_]
+
+            print doc
+
+            print "========= Shapes ========="
+
+            for ff in feed:
+                print ff.name, " ", numpy.shape(feed[ff])
+
             _, cst = sess.run([train_step, cost], feed_dict=feed)
             print i, cst

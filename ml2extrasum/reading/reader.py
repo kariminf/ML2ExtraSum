@@ -131,9 +131,10 @@ class Reader(object):
         rouge1_cont = json.load(open(doc_path + "/sentRouge1.json"))
 
         max_len = max(size_cont.values())
-        print max_len
+        doc_size = len(sim_cont)
 
         for num in sorted(tf_cont):
+
             v = tf_cont[num]
             v.sort(reverse=True)
             v = [[float(i)] for i in v]
@@ -143,16 +144,12 @@ class Reader(object):
             v = sim_cont[num]
             v.sort(reverse=True)
             v = [[float(i)] for i in v]
-            extend(v, max_len)
+            extend(v, doc_size)
             sim_vec.append(v)
 
             size_vec.append([float(size_cont[num])])
             pos_vec.append([float(num)])
             rouge_vec.append([float(rouge1_cont[num])])
-
-
-        extend(tf_vec, int(max_len))
-        extend(sim_vec, int(max_len))
 
         return len(tf_cont)
 
