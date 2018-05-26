@@ -27,22 +27,32 @@ class Scorer(object):
         self.name = name
         self.net = None
         self.layers = 0
+        self.done = False
 
     def add_input(self, input):
+        if self.done:
+            return self
         if self.net is None :
             self.net = input
         else:
             self.net = tf.concat((self.net, input), axis=1)
         return self
 
-    def add_layer(self, units, activation=tf.nn.relu):
-
-        if self.net == None:
+    def add_hidden(self, units, activation=tf.nn.relu, name=None):
+        if self.done or self.net == None:
             return self
 
         self.layers += 1
-        self.net = tf.layers.dense(self.net, units=units, activation=activation)
+        self.net = tf.layers.dense(self.net, units=units, activation=activation, name=name)
         return self
 
+    def add_output(self, units, activation=tf.nn.relu):
+        if not self.done:
+            self.add_hidden(units, activation, self.name)
+        self.done = True
+        return self.net
+
     def get_output(self):
+        if not self.done:
+            return None
         return self.net
