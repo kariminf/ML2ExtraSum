@@ -23,7 +23,8 @@ import os
 import numpy
 import tensorflow as tf
 from modeling.stat_net import StatNet
-from reading.reader import Reader
+#from reading.reader import Reader
+from reading.limited_reader import LimitedReader
 
 
 def repeat_vector(vector, nbr):
@@ -71,7 +72,7 @@ saver = tf.train.Saver()
 
 data = {}
 
-reader = Reader(STATS_DIR)
+reader = LimitedReader(STATS_DIR)
 
 for lang in os.listdir(STATS_DIR):
     lang_url = os.path.join(STATS_DIR, lang)
