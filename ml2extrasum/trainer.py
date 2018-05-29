@@ -47,6 +47,8 @@ doc_size_ = tf.placeholder(tf.float32, shape=[None,1], name="doc_size_in")
 # term frequencies (in the document) of a sentence
 sent_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
 # similarities of this sentence with others
+sent_sim_seq_ = tf.plalder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+# similarities of this sentence with others
 sent_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
 # sentence size
 sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")

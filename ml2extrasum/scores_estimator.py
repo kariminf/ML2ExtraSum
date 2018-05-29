@@ -21,13 +21,14 @@
 
 import os
 import json
+import numpy as np
 import tensorflow as tf
 
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
 
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats1/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
 MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
 
 def repeat_vector(vector, nbr):
@@ -96,17 +97,22 @@ for lang in os.listdir(STATS_DIR):
 
 scores = {}
 
+sqr = ""
+
 for lang in data:
     lang_data = data[lang]
     lang_scores = {}
-    scores[lang] = lang_scores
-
+    sqr += "=== " + lang + " ===\n"
     for doc in lang_data:
 
         print doc
+        sqr += "=== " + doc + " ===\n"
 
         doc_data = lang_data[doc]
         nbr_sents = doc_data["nbr_sents"]
+
+        print "doc_tf_seq=", np.shape(repeat_vector(doc_data["doc_tf_seq"], nbr_sents))
+
         feed = {
         doc_tf_seq_ : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
         doc_sim_seq_ : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
@@ -128,5 +134,21 @@ for lang in data:
         lang_scores[doc]["pos"] = pos.tolist()
         lang_scores[doc]["sent"] = sent.tolist()
 
+        print np.shape(lang)
+        print np.shape(sent)
+
+        sqr += "lang: " + str(lang.tolist()) + "\n"
+        sqr += "tf: " + str(tfreq.tolist()) + "\n"
+        sqr += "sim: " + str(sim.tolist()) + "\n"
+        sqr += "pos: " + str(pos.tolist()) + "\n"
+        sqr += "sent: " + str(sent.tolist()) + "\n"
+
+
+    #scores[lang] = lang_scores
+with open("Output.txt", "w") as text_file:
+    text_file.write(sqr)
+
+"""
 with open('data.json', 'w') as fp:
     json.dump(scores, fp)
+"""

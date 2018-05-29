@@ -28,3 +28,6 @@ class Model(object):
 
     def get_graph(self):
         return self.graph
+
+    def get_block(self, name):
+        return self.graph

@@ -29,6 +29,11 @@ import tensorflow as tf
 from scoring.scorer import Scorer
 from scoring.seq_scorer import SeqScorer
 
+
+TRAIN_ITER = 2
+LEARNING_RATE = 0.05
+
+
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
     graph.add_LSTM_input(sent_seq, 5, 2).add_LSTM_input(doc_seq, 5, 2)
@@ -75,22 +80,50 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
 
 class StatNet(Model):
 
-    def __init__(self,
-                doc_tf_seq,
-                doc_sim_seq,
-                doc_size_seq,
-                doc_size,
-                sent_tf_seq,
-                sent_sim_seq,
-                sent_size,
-                sent_pos):
+    def __init__(self):
         super(StatNet, self).__init__()
 
-        lang_scorer = get_language_scorer("lang_scorer", doc_tf_seq, doc_sim_seq, doc_size_seq)
+        #       Inputs holders
+        # =========================
+        # term frequencies in document
+        self.doc_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
+        # all sentences similarities in a document
+        self.doc_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_sim_seq_in")
+        # all sentences sizes in a document
+        self.doc_size_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_size_seq_in")
+        # document size
+        self.doc_size = tf.placeholder(tf.float32, shape=[None,1], name="doc_size_in")
+        # term frequencies (in the document) of a sentence
+        self.sent_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+        # similarities of this sentence with others
+        self.sent_sim_seq = tf.plalder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+        # similarities of this sentence with others
+        self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
+        # sentence size
+        self.sent_size = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
+        # sentence position
+        self.sent_pos = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
 
-        tf_scorer = get_tf_sim_scorer("tf_scorer", lang_scorer, sent_tf_seq, doc_tf_seq)
-        sim_scorer = get_tf_sim_scorer("sim_scorer", lang_scorer, sent_sim_seq, doc_sim_seq)
-        size_scorer = get_size_scorer("size_scorer", lang_scorer, sent_size, doc_size_seq)
-        pos_scorer = get_position_scorer("pos_scorer", lang_scorer, sent_pos, doc_size)
+        self.rouge_1 = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
+
+
+        #          Model
+        # =====================
+        self.lang_scorer = get_language_scorer("lang_scorer", doc_tf_seq, doc_sim_seq, doc_size_seq)
+
+        self.tf_scorer = get_tf_sim_scorer("tf_scorer", lang_scorer, sent_tf_seq, doc_tf_seq)
+        self.sim_scorer = get_tf_sim_scorer("sim_scorer", lang_scorer, sent_sim_seq, doc_sim_seq)
+        self.size_scorer = get_size_scorer("size_scorer", lang_scorer, sent_size, doc_size_seq)
+        self.pos_scorer = get_position_scorer("pos_scorer", lang_scorer, sent_pos, doc_size)
 
         self.graph = get_sentence_scorer("sent_scorer", lang_scorer, tf_scorer, sim_scorer, size_scorer, pos_scorer)
+
+
+
+        self.cost = tf.losses.mean_squared_error(self.rouge_1, self.graph)
+
+        train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
+
+
+    def train(batch):
+        
