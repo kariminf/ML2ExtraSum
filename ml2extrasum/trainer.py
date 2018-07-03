@@ -34,43 +34,7 @@ STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
 TRAIN_ITER = 2
 LEARNING_RATE = 0.05
 
-#Inputs holders
-#===============
-# term frequencies in document
-doc_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
-# all sentences similarities in a document
-doc_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_sim_seq_in")
-# all sentences sizes in a document
-doc_size_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_size_seq_in")
-# document size
-doc_size_ = tf.placeholder(tf.float32, shape=[None,1], name="doc_size_in")
-# term frequencies (in the document) of a sentence
-sent_tf_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
-# similarities of this sentence with others
-sent_sim_seq_ = tf.plalder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
-# similarities of this sentence with others
-sent_sim_seq_ = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
-# sentence size
-sent_size_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
-# sentence position
-sent_pos_ = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
-
-rouge_1_ = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
-
-model = StatNet(doc_tf_seq_, doc_sim_seq_, doc_size_seq_, doc_size_, \
-                sent_tf_seq_, sent_sim_seq_, sent_size_, sent_pos_)
-
-output = model.get_graph()
-
-cost = tf.losses.mean_squared_error(rouge_1_, output)
-
-train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
-
-init = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init)
-
-saver = tf.train.Saver()
+model = StatNet()
 
 data = {}
 
@@ -88,25 +52,7 @@ for i in range(TRAIN_ITER):
         lang_data = data[lang]
         for doc in lang_data:
             doc_data = lang_data[doc]
-            nbr_sents = doc_data["nbr_sents"]
-            feed = {
-            doc_tf_seq_ : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
-            doc_sim_seq_ : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
-            doc_size_seq_ : repeat_vector(doc_data["doc_size_seq"], nbr_sents),
-            doc_size_ : repeat_vector([nbr_sents], nbr_sents),
-            sent_tf_seq_ : doc_data["sent_tf_seq"],
-            sent_sim_seq_ : doc_data["sent_sim_seq"],
-            sent_size_ : doc_data["sent_size"],
-            sent_pos_ : doc_data["sent_pos"],
-            rouge_1_ : doc_data["rouge_1"]
-            }
+            cst = model.train(doc_data)
+            print doc, " ==> cost: ", cst
 
-            print doc
-
-            print "========= Shapes ========="
-
-            for ff in feed:
-                print ff.name, " ", numpy.shape(feed[ff])
-
-            _, cst = sess.run([train_step, cost], feed_dict=feed)
-            print i, cst
+model.save("models/stat0m")

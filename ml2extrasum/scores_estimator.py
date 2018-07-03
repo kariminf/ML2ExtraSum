@@ -23,6 +23,7 @@ import os
 import json
 import numpy as np
 import tensorflow as tf
+from modeling.stat_net import StatNet
 
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
@@ -34,50 +35,9 @@ MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-# Restoring the trained model
-# ============================
-sess = tf.Session()
+model = StatNet()
 
-model = tf.train.import_meta_graph(MODEL_DIR + '.meta')
-
-model.restore(sess, MODEL_DIR)
-
-graph = tf.get_default_graph()
-
-
-#Inputs holders
-#===============
-# term frequencies in document
-doc_tf_seq_ = graph.get_tensor_by_name("doc_tf_seq_in:0")
-# all sentences similarities in a document
-doc_sim_seq_ = graph.get_tensor_by_name("doc_sim_seq_in:0")
-# all sentences sizes in a document
-doc_size_seq_ = graph.get_tensor_by_name("doc_size_seq_in:0")
-# document size
-doc_size_ = graph.get_tensor_by_name("doc_size_in:0")
-# term frequencies (in the document) of a sentence
-sent_tf_seq_ = graph.get_tensor_by_name("sent_tf_seq_in:0")
-# similarities of this sentence with others
-sent_sim_seq_ = graph.get_tensor_by_name("sent_sim_seq_in:0")
-# sentence size
-sent_size_ = graph.get_tensor_by_name("sent_size_in:0")
-# sentence position
-sent_pos_ = graph.get_tensor_by_name("sent_pos_in:0")
-
-#rouge_1_ = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
-
-# Restoring the scorers
-# =======================
-
-lang_scorer = graph.get_tensor_by_name("lang_scorer/kernel:0")
-
-tf_scorer = graph.get_tensor_by_name("tf_scorer/kernel:0")
-sim_scorer = graph.get_tensor_by_name("sim_scorer/kernel:0")
-size_scorer = graph.get_tensor_by_name("size_scorer/kernel:0")
-pos_scorer = graph.get_tensor_by_name("pos_scorer/kernel:0")
-
-sent_scorer = graph.get_tensor_by_name("sent_scorer/kernel:0")
-
+model.restore("models/stat0m")
 
 # Data reading
 # ===============
@@ -93,9 +53,7 @@ for lang in os.listdir(STATS_DIR):
         data[lang] = reader.create_doc_batch()
 
 # Scoring
-# ===============
-
-scores = {}
+# ===============sent.tolist()
 
 sqr = ""
 
@@ -109,39 +67,15 @@ for lang in data:
         sqr += "=== " + doc + " ===\n"
 
         doc_data = lang_data[doc]
-        nbr_sents = doc_data["nbr_sents"]
 
-        print "doc_tf_seq=", np.shape(repeat_vector(doc_data["doc_tf_seq"], nbr_sents))
+        scores = model.test(doc_data)
 
-        feed = {
-        doc_tf_seq_ : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
-        doc_sim_seq_ : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
-        doc_size_seq_ : repeat_vector(doc_data["doc_size_seq"], nbr_sents),
-        doc_size_ : repeat_vector([nbr_sents], nbr_sents),
-        sent_tf_seq_ : doc_data["sent_tf_seq"],
-        sent_sim_seq_ : doc_data["sent_sim_seq"],
-        sent_size_ : doc_data["sent_size"],
-        sent_pos_ : doc_data["sent_pos"]
-        #rouge_1_ : doc_data["rouge_1"]
-        }
-
-        lang, tfreq, sim, size, pos, sent = sess.run([lang_scorer, tf_scorer, sim_scorer, size_scorer, pos_scorer, sent_scorer], feed_dict=feed)
-
-        lang_scores[doc] = {}
-        lang_scores[doc]["lang"] = lang.tolist()
-        lang_scores[doc]["tf"] = tfreq.tolist()
-        lang_scores[doc]["sim"] = sim.tolist()
-        lang_scores[doc]["pos"] = pos.tolist()
-        lang_scores[doc]["sent"] = sent.tolist()
-
-        print np.shape(lang)
-        print np.shape(sent)
-
-        sqr += "lang: " + str(lang.tolist()) + "\n"
-        sqr += "tf: " + str(tfreq.tolist()) + "\n"
-        sqr += "sim: " + str(sim.tolist()) + "\n"
-        sqr += "pos: " + str(pos.tolist()) + "\n"
-        sqr += "sent: " + str(sent.tolist()) + "\n"
+        sqr += "cost: " + str(scores["cost"]) + "\n"
+        sqr += "lang: " + str(scores["lang"]) + "\n"
+        sqr += "tf: " + str(scores["tf"]) + "\n"
+        sqr += "sim: " + str(scores["sim"]) + "\n"
+        sqr += "pos: " + str(scores["pos"]) + "\n"
+        sqr += "sent: " + str(scores["sent"]) + "\n"
 
 
     #scores[lang] = lang_scores

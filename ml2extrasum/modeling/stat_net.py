@@ -33,6 +33,8 @@ from scoring.seq_scorer import SeqScorer
 TRAIN_ITER = 2
 LEARNING_RATE = 0.05
 
+def repeat_vector(vector, nbr):
+    return [vector] * nbr
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
@@ -96,12 +98,12 @@ class StatNet(Model):
         # term frequencies (in the document) of a sentence
         self.sent_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
         # similarities of this sentence with others
-        self.sent_sim_seq = tf.plalder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+        self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
         # similarities of this sentence with others
         self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
         # sentence size
         self.sent_size = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
-        # sentence position
+        # sStatNetentence position
         self.sent_pos = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
 
         self.rouge_1 = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
@@ -109,21 +111,70 @@ class StatNet(Model):
 
         #          Model
         # =====================
-        self.lang_scorer = get_language_scorer("lang_scorer", doc_tf_seq, doc_sim_seq, doc_size_seq)
+        self.lang_scorer = get_language_scorer("lang_scorer", self.doc_tf_seq, self.doc_sim_seq, self.doc_size_seq)
 
-        self.tf_scorer = get_tf_sim_scorer("tf_scorer", lang_scorer, sent_tf_seq, doc_tf_seq)
-        self.sim_scorer = get_tf_sim_scorer("sim_scorer", lang_scorer, sent_sim_seq, doc_sim_seq)
-        self.size_scorer = get_size_scorer("size_scorer", lang_scorer, sent_size, doc_size_seq)
-        self.pos_scorer = get_position_scorer("pos_scorer", lang_scorer, sent_pos, doc_size)
+        self.tf_scorer = get_tf_sim_scorer("tf_scorer", self.lang_scorer, self.sent_tf_seq, self.doc_tf_seq)
+        self.sim_scorer = get_tf_sim_scorer("sim_scorer", self.lang_scorer, self.sent_sim_seq, self.doc_sim_seq)
+        self.size_scorer = get_size_scorer("size_scorer", self.lang_scorer, self.sent_size, self.doc_size_seq)
+        self.pos_scorer = get_position_scorer("pos_scorer", self.lang_scorer, self.sent_pos, self.doc_size)
 
-        self.graph = get_sentence_scorer("sent_scorer", lang_scorer, tf_scorer, sim_scorer, size_scorer, pos_scorer)
-
-
+        self.graph = get_sentence_scorer("sent_scorer", self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer)
 
         self.cost = tf.losses.mean_squared_error(self.rouge_1, self.graph)
 
-        train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
+        self.train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
 
+        init = tf.global_variables_initializer()
+        self.sess = tf.Session()
+        self.sess.run(init)
 
-    def train(batch):
-        
+    def train(self, doc_data):
+        nbr_sents = doc_data["nbr_sents"]
+        feed = {
+        self.doc_tf_seq : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
+        self.doc_sim_seq : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
+        self.doc_size_seq : repeat_vector(doc_data["doc_size_seq"], nbr_sents),
+        self.doc_size : repeat_vector([nbr_sents], nbr_sents),
+        self.sent_tf_seq : doc_data["sent_tf_seq"],
+        self.sent_sim_seq : doc_data["sent_sim_seq"],
+        self.sent_size : doc_data["sent_size"],
+        self.sent_pos : doc_data["sent_pos"],
+        self.rouge_1 : doc_data["rouge_10022325285244733095"]
+        }
+        _, cst = self.sess.run([self.train_step, self.cost], feed_dict=feed)
+        return cst
+
+    def test(self, doc_data):
+        nbr_sents = doc_data["nbr_sents"]
+        feed = {
+        self.doc_tf_seq : repeat_vector(doc_data["doc_tf_seq"], nbr_sents),
+        self.doc_sim_seq : repeat_vector(doc_data["doc_sim_seq"], nbr_sents),
+        self.doc_size_seq : repeat_vector(doc_data["doc_size_seq"], nbr_sents),
+        self.doc_size : repeat_vector([nbr_sents], nbr_sents),
+        self.sent_tf_seq : doc_data["sent_tf_seq"],
+        self.sent_sim_seq : doc_data["sent_sim_seq"],
+        self.sent_size : doc_data["sent_size"],
+        self.sent_pos : doc_data["sent_pos"],
+        self.rouge_1 : doc_data["rouge_1"]
+        }
+
+        lang, tfreq, sim, size, pos, sent, cst = self.sess.run([self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer, self.graph, self.cost], feed_dict=feed)
+
+        scores = {}
+        scores["cost"] = cst
+        scores["lang"] = lang.tolist()
+        scores["tf"] = tfreq.tolist()
+        scores["sim"] = sim.tolist()
+        scores["pos"] = pos.tolist()
+        scores["sent"] = sent.tolist()
+
+        return scores
+
+    def save(self, path):
+        saver = tf.train.Saver()
+        save_path = saver.save(self.sess, path)
+        print("Model saved in file: %s" % save_path)
+
+    def restore(self, path):
+        saver = tf.train.Saver()
+        saver.restore(self.sess, path)
