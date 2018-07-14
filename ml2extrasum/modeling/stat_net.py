@@ -38,34 +38,34 @@ def repeat_vector(vector, nbr):
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(sent_seq, 5, 2).add_LSTM_input(doc_seq, 5, 2)
+    graph.add_LSTM_input(sent_seq, 50, 3).add_LSTM_input(doc_seq, 50, 3)
     graph.add_input(lang)
-    graph.add_hidden(10, tf.nn.tanh).add_hidden(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.tanh)
+    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
     graph = SeqScorer(name)
     graph.add_input(lang).add_input(sent_size)
-    graph.add_LSTM_input(doc_size_seq, 5, 2)
-    graph.add_hidden(10, tf.nn.tanh).add_hidden(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.tanh)
+    graph.add_LSTM_input(doc_size_seq, 50, 3)
+    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     graph = Scorer(name)
     graph.add_input(lang).add_input(sent_pos).add_input(doc_size)
-    graph.add_hidden(10, tf.nn.tanh).add_hidden(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.tanh)
+    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(doc_tf_seq, 5, 2)
-    graph.add_LSTM_input(doc_sim_seq, 5, 2)
-    graph.add_LSTM_input(doc_size_seq, 5, 2)
-    graph.add_hidden(10, tf.nn.tanh).add_hidden(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.tanh)
+    graph.add_LSTM_input(doc_tf_seq, 50, 3)
+    graph.add_LSTM_input(doc_sim_seq, 50, 3)
+    graph.add_LSTM_input(doc_size_seq, 50, 3)
+    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
@@ -75,8 +75,8 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(sim)
     graph.add_input(size)
     graph.add_input(pos)
-    graph.add_hidden(10, tf.nn.tanh).add_hidden(10, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.tanh)
+    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 
@@ -139,7 +139,7 @@ class StatNet(Model):
         self.sent_sim_seq : doc_data["sent_sim_seq"],
         self.sent_size : doc_data["sent_size"],
         self.sent_pos : doc_data["sent_pos"],
-        self.rouge_1 : doc_data["rouge_10022325285244733095"]
+        self.rouge_1 : doc_data["rouge_1"]
         }
         _, cst = self.sess.run([self.train_step, self.cost], feed_dict=feed)
         return cst
