@@ -29,6 +29,8 @@ class Scorer(object):
         self.layers = 0
         self.done = False
         self.inputs = []
+        with tf.name_scope(name) as self.scope:
+            pass
 
     def add_input(self, input):
         if self.done:
@@ -47,7 +49,8 @@ class Scorer(object):
             self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
 
         self.layers += 1
-        self.net = tf.layers.dense(self.net, units=units, activation=activation, name=name)
+        with tf.name_scope(self.scope):
+            self.net = tf.layers.dense(self.net, units=units, activation=activation)
         return self
 
     def add_output(self, units, activation=tf.nn.relu):
