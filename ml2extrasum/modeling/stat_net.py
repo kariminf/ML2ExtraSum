@@ -40,23 +40,23 @@ def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
     graph.add_LSTM_input(sent_seq, 50, 3).add_LSTM_input(doc_seq, 50, 3)
     graph.add_input(lang)
-    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_hidden(100, tf.nn.relu).add_hidden(100, tf.nn.relu) # 2 hidden layers
+    graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
     graph = SeqScorer(name)
     graph.add_input(lang).add_input(sent_size)
     graph.add_LSTM_input(doc_size_seq, 50, 3)
-    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_hidden(100, tf.nn.relu).add_hidden(100, tf.nn.relu) # 2 hidden layers
+    graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     graph = Scorer(name)
     graph.add_input(lang).add_input(sent_pos).add_input(doc_size)
     graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
@@ -65,7 +65,7 @@ def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
     graph.add_LSTM_input(doc_sim_seq, 50, 3)
     graph.add_LSTM_input(doc_size_seq, 50, 3)
     graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
@@ -76,7 +76,7 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(size)
     graph.add_input(pos)
     graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 
@@ -121,8 +121,12 @@ class StatNet(Model):
         self.graph = get_sentence_scorer("sent_scorer", self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer)
 
         self.cost = tf.losses.mean_squared_error(self.rouge_1, self.graph)
+        #self.cost = tf.losses.sigmoid_cross_entropy(self.rouge_1, self.graph)
+        #self.cost = tf.reduce_mean(tf.losses.mean_squared_error(self.rouge_1, self.graph))
 
-        self.train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
+
+        #self.train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
+        self.train_step = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
 
         init = tf.global_variables_initializer()
         self.sess = tf.Session()
@@ -178,3 +182,6 @@ class StatNet(Model):
     def restore(self, path):
         saver = tf.train.Saver()
         saver.restore(self.sess, path)
+
+    def get_session(self):
+        return self.sess

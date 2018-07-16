@@ -28,6 +28,7 @@ class Scorer(object):
         self.net = None
         self.layers = 0
         self.done = False
+        self.inputs = []
 
     def add_input(self, input):
         if self.done:
@@ -35,12 +36,15 @@ class Scorer(object):
         if self.net is None :
             self.net = input
         else:
-            self.net = tf.concat((self.net, input), axis=1)
+            self.inputs.append(input)
         return self
 
     def add_hidden(self, units, activation=tf.nn.relu, name=None):
         if self.done or self.net == None:
             return self
+
+        if self.layers == 0:
+            self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
 
         self.layers += 1
         self.net = tf.layers.dense(self.net, units=units, activation=activation, name=name)
