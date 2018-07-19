@@ -37,7 +37,7 @@ class SeqScorer(Scorer):
         super(SeqScorer, self).__init__(name)
         self.lstm_nbr = 0
 
-    def add_LSTM_input(self, input, hidden_size, num_layers = 1, num_proj = None, activation=tf.nn.tanh):
+    def add_LSTM_input(self, input, hidden_size, num_layers = 1, num_proj = None, activation=tf.nn.relu):
         if self.done:
             return self
         scope = self.name + "_lstm" + str(self.lstm_nbr)

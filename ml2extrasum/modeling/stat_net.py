@@ -38,34 +38,36 @@ def repeat_vector(vector, nbr):
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(sent_seq, 50, 3).add_LSTM_input(doc_seq, 50, 3)
+    graph.add_LSTM_input(sent_seq, 50, 1,2).add_LSTM_input(doc_seq, 50, 1,2)
     graph.add_input(lang)
-    graph.add_hidden(100, tf.nn.relu).add_hidden(100, tf.nn.relu) # 2 hidden layers
+    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
     graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
     graph = SeqScorer(name)
     graph.add_input(lang).add_input(sent_size)
-    graph.add_LSTM_input(doc_size_seq, 50, 3)
-    graph.add_hidden(100, tf.nn.relu).add_hidden(100, tf.nn.relu) # 2 hidden layers
+    graph.add_LSTM_input(doc_size_seq, 50, 1, 2)
+    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
     graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     graph = Scorer(name)
     graph.add_input(lang).add_input(sent_pos).add_input(doc_size)
-    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
     graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(doc_tf_seq, 50, 3)
-    graph.add_LSTM_input(doc_sim_seq, 50, 3)
-    graph.add_LSTM_input(doc_size_seq, 50, 3)
-    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
-    graph.add_output(1, tf.nn.softmax)
+    graph.add_LSTM_input(doc_tf_seq, 50, 1, 2)
+    graph.add_LSTM_input(doc_sim_seq, 50, 1, 2)
+    graph.add_LSTM_input(doc_size_seq, 50, 1, 2)
+    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
+    # We want to represent the language in a two demension space
+    # Using a linear function and values greater than 0
+    graph.add_output(2, tf.nn.tanh)
     return graph.get_output()
 
 def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
@@ -75,18 +77,18 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(sim)
     graph.add_input(size)
     graph.add_input(pos)
-    graph.add_hidden(100, tf.nn.tanh).add_hidden(100, tf.nn.tanh) # 2 hidden layers
+    graph.add_hidden(20, tf.nn.relu).add_hidden(20, tf.nn.relu) # 2 hidden layers
     graph.add_output(1, tf.nn.softmax)
     return graph.get_output()
 
 
 class StatNet(Model):
 
-    def __init__(self):
-        super(StatNet, self).__init__()
+    def __init__(self, learn_rate=0.05, cost_fct=tf.losses.mean_squared_error, opt_fct=tf.train.GradientDescentOptimizer):
+        super(StatNet, self).__init__(learn_rate, cost_fct, opt_fct)
 
-        #       Inputs holders
-        # =========================
+        #       Inputs
+        # ==============
         # term frequencies in document
         self.doc_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
         # all sentences similarities in a document
@@ -109,7 +111,7 @@ class StatNet(Model):
         self.rouge_1 = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
 
 
-        #          Model
+        #          Scorers
         # =====================
         self.lang_scorer = get_language_scorer("lang_scorer", self.doc_tf_seq, self.doc_sim_seq, self.doc_size_seq)
 
@@ -120,13 +122,16 @@ class StatNet(Model):
 
         self.graph = get_sentence_scorer("sent_scorer", self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer)
 
-        self.cost = tf.losses.mean_squared_error(self.rouge_1, self.graph)
-        #self.cost = tf.losses.sigmoid_cross_entropy(self.rouge_1, self.graph)
-        #self.cost = tf.reduce_mean(tf.losses.mean_squared_error(self.rouge_1, self.graph))
+        #          Training
+        # =====================
 
+        # cost function
+        self.cost = self.cost_fct(self.rouge_1, self.graph)
+        # cost optimization
+        self.train_step = self.opt_fct(self.learn_rate).minimize(self.cost)
 
-        #self.train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(self.cost)
-        self.train_step = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.cost)
+        #      Initializing
+        # =====================
 
         init = tf.global_variables_initializer()
         self.sess = tf.Session()

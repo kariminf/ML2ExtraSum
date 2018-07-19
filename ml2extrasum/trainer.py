@@ -34,7 +34,17 @@ STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
 TRAIN_ITER = 20
 LEARNING_RATE = 0.05
 
-model = StatNet()
+# by default:
+# ===========
+# opt_fct=tf.train.GradientDescentOptimizer
+#
+# others:
+# =======
+# opt_fct=tf.train.AdamOptimizer
+# opt_fct=tf.train.AdagradOptimizer
+# cost_fct=tf.losses.sigmoid_cross_entropy
+model = StatNet(opt_fct=tf.train.AdagradOptimizer)
+
 
 data = {}
 

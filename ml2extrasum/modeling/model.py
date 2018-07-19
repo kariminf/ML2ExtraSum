@@ -23,8 +23,11 @@ import tensorflow as tf
 
 class Model(object):
 
-    def __init__(self):
+    def __init__(self, learn_rate=0.05, cost_fct=tf.losses.mean_squared_error, opt_fct=tf.train.GradientDescentOptimizer):
         self.graph = None
+        self.cost_fct = cost_fct
+        self.opt_fct = opt_fct
+        self.learn_rate = learn_rate
 
     def get_graph(self):
         return self.graph
