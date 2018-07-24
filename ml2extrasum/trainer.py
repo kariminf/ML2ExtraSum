@@ -32,7 +32,7 @@ def repeat_vector(vector, nbr):
 
 STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
 TRAIN_ITER = 20
-LEARNING_RATE = 0.05
+LEARNING_RATE = 0.01
 
 # by default:
 # ===========
@@ -43,7 +43,7 @@ LEARNING_RATE = 0.05
 # opt_fct=tf.train.AdamOptimizer
 # opt_fct=tf.train.AdagradOptimizer
 # cost_fct=tf.losses.sigmoid_cross_entropy
-model = StatNet(opt_fct=tf.train.AdagradOptimizer)
+model = StatNet(learn_rate=LEARNING_RATE)
 
 
 data = {}
@@ -57,6 +57,9 @@ for lang in os.listdir(STATS_DIR):
         reader.set_lang(lang)
         data[lang] = reader.create_doc_batch()
 
+sess = model.get_session()
+writer = tf.summary.FileWriter("models", sess.graph)
+
 for i in range(TRAIN_ITER):
     for lang in data:
         lang_data = data[lang]
@@ -64,5 +67,5 @@ for i in range(TRAIN_ITER):
             doc_data = lang_data[doc]
             cst = model.train(doc_data)
             print doc, " ==> cost: ", cst
-
+writer.close()
 model.save("models/stat0m")

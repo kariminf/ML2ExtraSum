@@ -37,8 +37,13 @@ class Scorer(object):
             return self
         if self.net is None :
             self.net = input
+        """
+        if self.net is None :
+            self.net = input
         else:
             self.inputs.append(input)
+        """
+        self.inputs.append(input)
         return self
 
     def add_hidden(self, units, activation=tf.nn.relu, name=None):
@@ -49,6 +54,10 @@ class Scorer(object):
             self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
 
         self.layers += 1
+        """
+        if name == None:
+            name = self.name + str(self.layers)
+        """
         with tf.name_scope(self.scope):
             self.net = tf.layers.dense(self.net, units=units, activation=activation)
         return self

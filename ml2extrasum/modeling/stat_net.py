@@ -30,44 +30,41 @@ from scoring.scorer import Scorer
 from scoring.seq_scorer import SeqScorer
 
 
-TRAIN_ITER = 2
-LEARNING_RATE = 0.05
-
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(sent_seq, 50, 1,2).add_LSTM_input(doc_seq, 50, 1,2)
     graph.add_input(lang)
-    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
-    graph.add_output(1, tf.nn.softmax)
+    graph.add_LSTM_input(sent_seq, 50, 1, 2).add_LSTM_input(doc_seq, 50, 1, 2)
+    graph.add_hidden(50, tf.nn.relu)#.add_hidden(50, tf.nn.relu) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
     graph = SeqScorer(name)
     graph.add_input(lang).add_input(sent_size)
     graph.add_LSTM_input(doc_size_seq, 50, 1, 2)
-    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
-    graph.add_output(1, tf.nn.softmax)
+    graph.add_hidden(50, tf.nn.relu)#.add_hidden(50, tf.nn.relu) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     graph = Scorer(name)
     graph.add_input(lang).add_input(sent_pos).add_input(doc_size)
-    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
-    graph.add_output(1, tf.nn.softmax)
+    graph.add_hidden(50, tf.nn.relu)#.add_hidden(50, tf.nn.relu) # 2 hidden layers
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(doc_tf_seq, 50, 1, 2)
-    graph.add_LSTM_input(doc_sim_seq, 50, 1, 2)
-    graph.add_LSTM_input(doc_size_seq, 50, 1, 2)
-    graph.add_hidden(50, tf.nn.relu).add_hidden(50, tf.nn.relu) # 2 hidden layers
+    graph.add_LSTM_input(doc_tf_seq, 50, 1)
+    graph.add_LSTM_input(doc_sim_seq, 50, 1)
+    graph.add_LSTM_input(doc_size_seq, 50, 1)
+    #graph.add_hidden(50, tf.nn.relu)#.add_hidden(50, tf.nn.relu) # 2 hidden layers
     # We want to represent the language in a two demension space
     # Using a linear function and values greater than 0
-    graph.add_output(2, tf.nn.tanh)
+    graph.add_output(2, tf.nn.sigmoid)
     return graph.get_output()
 
 def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
@@ -78,7 +75,7 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(size)
     graph.add_input(pos)
     graph.add_hidden(20, tf.nn.relu).add_hidden(20, tf.nn.relu) # 2 hidden layers
-    graph.add_output(1, tf.nn.softmax)
+    graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
 

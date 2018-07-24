@@ -23,6 +23,7 @@ import tensorflow as tf
 #from deepmultilsum.scoring.scorer import Scorer
 from scorer import Scorer
 
+"""
 def transform_output(net):
     batch_size = tf.shape(net)[0]
     max_length = tf.shape(net)[1]
@@ -30,6 +31,7 @@ def transform_output(net):
     index = tf.range(0, batch_size) * max_length
     flat = tf.reshape(net, [-1, out_size])
     return tf.gather(flat, index)
+"""
 
 class SeqScorer(Scorer):
 
@@ -49,8 +51,9 @@ class SeqScorer(Scorer):
             else:
                 lstms.append(tf.contrib.rnn.LSTMCell(hidden_size, num_proj=num_proj))
             multi_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(lstms)
-            layer,_ = tf.nn.dynamic_rnn(multi_rnn_cell, input, dtype=tf.float32)
-            lstm_output = transform_output(layer)
+            lstm_output,_ = tf.nn.dynamic_rnn(multi_rnn_cell, input, dtype=tf.float32)
+            # https://stackoverflow.com/questions/43643663/merge-serval-models-lstms-in-tensorflow
+            lstm_output = lstm_output[:, -1, :]
             self.add_input(lstm_output)
 
         return self
