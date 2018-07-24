@@ -44,16 +44,17 @@ class SeqScorer(Scorer):
             return self
         scope = self.name + "_lstm" + str(self.lstm_nbr)
         self.lstm_nbr += 1
-        with tf.variable_scope(scope):
-            lstms = [tf.contrib.rnn.LSTMCell(hidden_size) for _ in range(num_layers-1)]
-            if num_proj is None:
-                lstms.append(tf.contrib.rnn.LSTMCell(hidden_size))
-            else:
-                lstms.append(tf.contrib.rnn.LSTMCell(hidden_size, num_proj=num_proj))
-            multi_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(lstms)
-            lstm_output,_ = tf.nn.dynamic_rnn(multi_rnn_cell, input, dtype=tf.float32)
-            # https://stackoverflow.com/questions/43643663/merge-serval-models-lstms-in-tensorflow
-            lstm_output = lstm_output[:, -1, :]
-            self.add_input(lstm_output)
+        with tf.name_scope(self.scope):
+            with tf.variable_scope(scope):
+                lstms = [tf.contrib.rnn.LSTMCell(hidden_size) for _ in range(num_layers-1)]
+                if num_proj is None:
+                    lstms.append(tf.contrib.rnn.LSTMCell(hidden_size))
+                else:
+                    lstms.append(tf.contrib.rnn.LSTMCell(hidden_size, num_proj=num_proj))
+                multi_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(lstms)
+                lstm_output,_ = tf.nn.dynamic_rnn(multi_rnn_cell, input, dtype=tf.float32)
+                # https://stackoverflow.com/questions/43643663/merge-serval-models-lstms-in-tensorflow
+                lstm_output = lstm_output[:, -1, :]
+                self.add_input(lstm_output)
 
         return self

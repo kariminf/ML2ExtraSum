@@ -24,13 +24,13 @@ import json
 import reader
 from reader import Reader
 
-DOC_SIM_LIMIT = 3
-SENT_SIM_LIMIT = 50
+DOC_SIM_LIMIT = 50
+SENT_SIM_LIMIT = 25
 
-DOC_TF_LIMIT = 200
-SENT_TF_LIMIT = 50
+DOC_TF_LIMIT = 50
+SENT_TF_LIMIT = 25
 
-DOC_SIZE_LIMIT = 100
+DOC_SIZE_LIMIT = 50
 
 def list_to_size(vector, limit):
     #vector.sort(reverse=True)

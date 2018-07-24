@@ -51,7 +51,8 @@ class Scorer(object):
             return self
 
         if self.layers == 0:
-            self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
+            with tf.name_scope(self.scope):
+                self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
 
         self.layers += 1
         """
