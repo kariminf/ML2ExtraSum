@@ -89,25 +89,23 @@ class StatNet(Model):
         #       Inputs
         # ==============
         # term frequencies in document
-        self.doc_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq_in")
+        self.doc_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_tf_seq")
         # all sentences similarities in a document
-        self.doc_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_sim_seq_in")
+        self.doc_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_sim_seq")
         # all sentences sizes in a document
-        self.doc_size_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_size_seq_in")
+        self.doc_size_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="doc_size_seq")
         # document size
-        self.doc_size = tf.placeholder(tf.float32, shape=[None,1], name="doc_size_in")
+        self.doc_size = tf.placeholder(tf.float32, shape=[None,1], name="doc_size")
         # term frequencies (in the document) of a sentence
-        self.sent_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
+        self.sent_tf_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq")
         # similarities of this sentence with others
-        self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_tf_seq_in")
-        # similarities of this sentence with others
-        self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq_in")
+        self.sent_sim_seq = tf.placeholder(tf.float32, shape=[None,None,1], name="sent_sim_seq")
         # sentence size
-        self.sent_size = tf.placeholder(tf.float32, shape=[None,1], name="sent_size_in")
+        self.sent_size = tf.placeholder(tf.float32, shape=[None,1], name="sent_size")
         # sStatNetentence position
-        self.sent_pos = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos_in")
+        self.sent_pos = tf.placeholder(tf.float32, shape=[None,1], name="sent_pos")
 
-        self.rouge_1 = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1_out")
+        self.rouge_1 = tf.placeholder(tf.float32, shape=[None,1], name="rouge_1")
 
 
         #          Scorers

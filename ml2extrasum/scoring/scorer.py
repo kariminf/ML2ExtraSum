@@ -55,17 +55,17 @@ class Scorer(object):
                 self.net = tf.concat(self.inputs, axis=1, name=self.name + "-in")
 
         self.layers += 1
-        """
+
         if name == None:
-            name = self.name + str(self.layers)
-        """
+            name = self.name + "_hidden" + str(self.layers)
+
         with tf.name_scope(self.scope):
-            self.net = tf.layers.dense(self.net, units=units, activation=activation)
+            self.net = tf.layers.dense(self.net, units=units, activation=activation, name=name)
         return self
 
     def add_output(self, units, activation=tf.nn.relu):
         if not self.done:
-            self.add_hidden(units, activation, self.name)
+            self.add_hidden(units, activation, self.name + "_output")
         self.done = True
         return self.net
 
