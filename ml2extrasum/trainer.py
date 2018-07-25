@@ -63,6 +63,7 @@ writer = tf.summary.FileWriter("models", sess.graph)
 for i in range(TRAIN_ITER):
     for lang in data:
         lang_data = data[lang]
+        model.init_lang_score(lang)
         for doc in lang_data:
             doc_data = lang_data[doc]
             cst = model.train(doc_data)

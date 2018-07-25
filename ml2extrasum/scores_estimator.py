@@ -29,7 +29,7 @@ from modeling.stat_net import StatNet
 from reading.limited_reader import LimitedReader
 
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
 MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
 
 def repeat_vector(vector, nbr):
@@ -70,12 +70,12 @@ for lang in data:
 
         scores = model.test(doc_data)
 
-        sqr += "cost: " + str(scores["cost"]) + "\n"
+        #sqr += "cost: " + str(scores["cost"]) + "\n"
         sqr += "lang: " + str(scores["lang"]) + "\n"
-        sqr += "tf: " + str(scores["tf"]) + "\n"
-        sqr += "sim: " + str(scores["sim"]) + "\n"
-        sqr += "pos: " + str(scores["pos"]) + "\n"
-        sqr += "sent: " + str(scores["sent"]) + "\n"
+        #sqr += "tf: " + str(scores["tf"]) + "\n"
+        #sqr += "sim: " + str(scores["sim"]) + "\n"
+        #sqr += "pos: " + str(scores["pos"]) + "\n"
+        #sqr += "sent: " + str(scores["sent"]) + "\n"
 
 
     #scores[lang] = lang_scores

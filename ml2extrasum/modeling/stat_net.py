@@ -86,6 +86,9 @@ class StatNet(Model):
     def __init__(self, learn_rate=0.05, cost_fct=tf.losses.mean_squared_error, opt_fct=tf.train.GradientDescentOptimizer):
         super(StatNet, self).__init__(learn_rate, cost_fct, opt_fct)
 
+        self.lang_scores = {}
+        self.current_lang = ""
+
         #       Inputs
         # ==============
         # term frequencies in document
@@ -122,8 +125,22 @@ class StatNet(Model):
         #          Training
         # =====================
 
-        # cost function
-        self.cost = self.cost_fct(self.rouge_1, self.graph)
+        with tf.name_scope("cost_function") as self.scope:
+            self.lang_score = tf.Variable([0, 0], dtype=tf.float32, name="lang_tmp_score")
+            # cost function
+            self.cost1 = self.cost_fct(self.rouge_1, self.graph)
+
+            lang_score = self.lang_scorer[0,:]
+
+            self.cost2 = self.cost_fct(lang_score, self.lang_score)
+
+            self.cost = self.cost1 + self.cost2
+
+            #Save state of the language
+            self.lang_scores[self.current_lang] = lang_score
+            #Save state of the document of the same language
+            self.lang_score = tf.assign(self.lang_score, lang_score)
+
         # cost optimization
         self.train_step = self.opt_fct(self.learn_rate).minimize(self.cost)
 
@@ -133,6 +150,15 @@ class StatNet(Model):
         init = tf.global_variables_initializer()
         self.sess = tf.Session()
         self.sess.run(init)
+
+    def init_lang_score (self, lang):
+        self.current_lang = lang
+        if lang in self.lang_scores:
+            lang_score = self.lang_scores[lang]
+        else:
+            lang_score = [0, 0]
+
+        self.lang_score = tf.assign(self.lang_score, lang_score)
 
     def train(self, doc_data):
         nbr_sents = doc_data["nbr_sents"]
@@ -168,7 +194,7 @@ class StatNet(Model):
 
         scores = {}
         scores["cost"] = cst
-        scores["lang"] = lang.tolist()
+        scores["lang"] = lang[0,:]
         scores["tf"] = tfreq.tolist()
         scores["sim"] = sim.tolist()
         scores["pos"] = pos.tolist()
