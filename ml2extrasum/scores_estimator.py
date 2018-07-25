@@ -29,15 +29,15 @@ from modeling.stat_net import StatNet
 from reading.limited_reader import LimitedReader
 
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
-MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
+#MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
 
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 model = StatNet()
 
-model.restore("models/stat0m")
+model.restore("outputs/stat0m")
 
 # Data reading
 # ===============
@@ -45,42 +45,52 @@ data = {}
 
 reader = LimitedReader(STATS_DIR)
 
+json = "{"
+
+lang_next = False
+
 for lang in os.listdir(STATS_DIR):
     lang_url = os.path.join(STATS_DIR, lang)
     if os.path.isdir(lang_url):
         print "reading ", lang
         reader.set_lang(lang)
-        data[lang] = reader.create_doc_batch()
+        lang_data = reader.create_doc_batch()
+        if lang_next:
+            json += "\t},\n"
+        else:
+            lang_next = True
+        lang_scores = {}
+        json += "\t\"" + lang + "\": {\n"
+        doc_next = False
+        for doc in lang_data:
+            if doc_next:
+                json += "\t\t},\n"
+            else:
+                doc_next = True
+            print doc
+            json += "\t\t\"" + doc + "\":{\n"
 
-# Scoring
-# ===============sent.tolist()
+            doc_data = lang_data[doc]
 
-sqr = ""
+            scores = model.test(doc_data)
 
-for lang in data:
-    lang_data = data[lang]
-    lang_scores = {}
-    sqr += "=== " + lang + " ===\n"
-    for doc in lang_data:
+            json += "\t\t\t\"cost\": " + str(scores["cost"]) + ",\n"
+            json += "\t\t\t\"lang\": " + str(scores["lang"]) + ",\n"
+            json += "\t\t\t\"tf\": " + str(scores["tf"]) + ",\n"
+            json += "\t\t\t\"sim\": " + str(scores["sim"]) + ",\n"
+            json += "\t\t\t\"pos\": " + str(scores["pos"]) + ",\n"
+            json += "\t\t\t\"sent\": " + str(scores["sent"]) + "\n"
+        # The last doc
+        json += "\t\t}\n"
 
-        print doc
-        sqr += "=== " + doc + " ===\n"
-
-        doc_data = lang_data[doc]
-
-        scores = model.test(doc_data)
-
-        #sqr += "cost: " + str(scores["cost"]) + "\n"
-        sqr += "lang: " + str(scores["lang"]) + "\n"
-        #sqr += "tf: " + str(scores["tf"]) + "\n"
-        #sqr += "sim: " + str(scores["sim"]) + "\n"
-        #sqr += "pos: " + str(scores["pos"]) + "\n"
-        #sqr += "sent: " + str(scores["sent"]) + "\n"
-
+# The last lang
+json += "\t}\n"
+# The global block
+json += "}\n"
 
     #scores[lang] = lang_scores
-with open("Output.txt", "w") as text_file:
-    text_file.write(sqr)
+with open("outputs/test.json", "w") as text_file:
+    text_file.write(json)
 
 """
 with open('data.json', 'w') as fp:

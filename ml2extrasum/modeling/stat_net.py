@@ -194,11 +194,11 @@ class StatNet(Model):
 
         scores = {}
         scores["cost"] = cst
-        scores["lang"] = lang[0,:]
-        scores["tf"] = tfreq.tolist()
-        scores["sim"] = sim.tolist()
-        scores["pos"] = pos.tolist()
-        scores["sent"] = sent.tolist()
+        scores["lang"] = lang[0,:].tolist()
+        scores["tf"] = tfreq.flatten().tolist()
+        scores["sim"] = sim.flatten().tolist()
+        scores["pos"] = pos.flatten().tolist()
+        scores["sent"] = sent.flatten().tolist()
 
         return scores
 

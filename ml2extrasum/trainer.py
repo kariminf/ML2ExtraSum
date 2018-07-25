@@ -30,8 +30,8 @@ from reading.limited_reader import LimitedReader
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0/"
-TRAIN_ITER = 3
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
+TRAIN_ITER = 100
 LEARNING_RATE = 0.05
 
 # by default:
@@ -58,7 +58,7 @@ for lang in os.listdir(STATS_DIR):
         data[lang] = reader.create_doc_batch()
 
 sess = model.get_session()
-writer = tf.summary.FileWriter("models", sess.graph)
+writer = tf.summary.FileWriter("outputs", sess.graph)
 
 for i in range(TRAIN_ITER):
     for lang in data:
@@ -69,4 +69,4 @@ for i in range(TRAIN_ITER):
             cst = model.train(doc_data)
             print doc, " ==> cost: ", cst
 writer.close()
-model.save("models/stat0m")
+model.save("outputs/stat0m")
