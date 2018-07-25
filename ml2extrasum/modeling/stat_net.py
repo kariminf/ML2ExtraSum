@@ -86,8 +86,8 @@ class StatNet(Model):
     def __init__(self, learn_rate=0.05, cost_fct=tf.losses.mean_squared_error, opt_fct=tf.train.GradientDescentOptimizer):
         super(StatNet, self).__init__(learn_rate, cost_fct, opt_fct)
 
-        self.lang_scores = {}
-        self.current_lang = ""
+        #self.lang_scores = {}
+        #self.current_lang = ""
 
         #       Inputs
         # ==============
@@ -125,6 +125,7 @@ class StatNet(Model):
         #          Training
         # =====================
 
+        """
         with tf.name_scope("cost_function") as self.scope:
             self.lang_score = tf.Variable([0, 0], dtype=tf.float32, name="lang_tmp_score")
             # cost function
@@ -140,6 +141,9 @@ class StatNet(Model):
             self.lang_scores[self.current_lang] = lang_score
             #Save state of the document of the same language
             self.lang_score = tf.assign(self.lang_score, lang_score)
+        """
+
+        self.cost = self.cost_fct(self.rouge_1, self.graph)
 
         # cost optimization
         self.train_step = self.opt_fct(self.learn_rate).minimize(self.cost)
@@ -151,6 +155,7 @@ class StatNet(Model):
         self.sess = tf.Session()
         self.sess.run(init)
 
+    """
     def init_lang_score (self, lang):
         self.current_lang = lang
         if lang in self.lang_scores:
@@ -159,6 +164,7 @@ class StatNet(Model):
             lang_score = [0, 0]
 
         self.lang_score = tf.assign(self.lang_score, lang_score)
+    """
 
     def train(self, doc_data):
         nbr_sents = doc_data["nbr_sents"]

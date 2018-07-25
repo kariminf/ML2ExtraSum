@@ -1,2 +1,4 @@
 json
 tensorflow
+matplotlib
+numpy

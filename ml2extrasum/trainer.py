@@ -31,7 +31,7 @@ def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
-TRAIN_ITER = 100
+TRAIN_ITER = 10
 LEARNING_RATE = 0.05
 
 # by default:
@@ -63,10 +63,10 @@ writer = tf.summary.FileWriter("outputs", sess.graph)
 for i in range(TRAIN_ITER):
     for lang in data:
         lang_data = data[lang]
-        model.init_lang_score(lang)
+        #model.init_lang_score(lang)
         for doc in lang_data:
             doc_data = lang_data[doc]
             cst = model.train(doc_data)
-            print doc, " ==> cost: ", cst
+        print "it-", i, ".", lang, " ==> cost: ", cst
 writer.close()
 model.save("outputs/stat0m")
