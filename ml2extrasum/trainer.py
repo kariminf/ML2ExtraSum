@@ -22,7 +22,7 @@
 import os
 import numpy
 import tensorflow as tf
-from modeling.stat_net import StatNet
+from modeling.stat_net_reg1 import StatNet
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
 
@@ -66,6 +66,7 @@ for i in range(TRAIN_ITER):
         #model.init_lang_score(lang)
         for doc in lang_data:
             doc_data = lang_data[doc]
+            doc_data["lang"] = lang
             cst = model.train(doc_data)
         print "it-", i, ".", lang, " ==> cost: ", cst
 writer.close()
