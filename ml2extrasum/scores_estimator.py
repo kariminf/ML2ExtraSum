@@ -29,7 +29,7 @@ from modeling.stat_net import StatNet
 from reading.limited_reader import LimitedReader
 
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats1/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
 #MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
 
 def repeat_vector(vector, nbr):

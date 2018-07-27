@@ -23,7 +23,7 @@ import os
 import json
 import numpy as np
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats1/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
 
 def extract_vec(cont):
     rouge_vec = []

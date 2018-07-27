@@ -25,10 +25,37 @@ colors = [
 "hotpink",
 "sienna",
 "olive",
-"gold"
+"gold",
+"pink",
+"lime",
+"purple",
+"teal"
 ]
 
-markers = ['o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X']
+markers = [
+'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
+#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
+#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
+#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X'
+]
+
+langs = [
+"ar",
+"cs",
+"de",
+"el",
+"en",
+"es",
+"fa",
+"fi",
+"fr",
+"he",
+"it",
+"ja",
+"pt",
+"ru",
+"zh"
+]
 
 path = os.path.join("./outputs/", "test.json")
 
@@ -38,9 +65,20 @@ i = 0
 
 fig, ax = plt.subplots()
 
+"""
 for lang in cont:
     X, Y = get_lang_scores(cont[lang])
     ax.scatter(X, Y, label=lang, marker=markers[i], facecolors="none", edgecolors=colors[i])
+    i += 1
+"""
+
+for i in range(15):
+    lang = langs[i]
+    X, Y = get_lang_scores(cont[lang])
+    #ax.scatter(X, Y, label=lang, marker=markers[i], facecolors="none", edgecolors=colors[i])
+    scale = [50] * 30
+    ax.scatter(X, Y, label=lang, marker=markers[i], facecolors="none", edgecolors=colors[i], linewidth=1.5, s=scale)
+    #ax.scatter(X, Y, label=lang, marker="o", facecolors=colors[i], edgecolors="black")
     i += 1
 
 """

@@ -31,7 +31,7 @@ def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
-TRAIN_ITER = 500
+TRAIN_ITER = 50
 LEARNING_RATE = 0.05
 
 # by default:
