@@ -30,7 +30,7 @@ from reading.limited_reader import LimitedReader
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
 TRAIN_ITER = 500
 LEARNING_RATE = 0.05
 
@@ -51,21 +51,21 @@ sess = model.get_session()
 writer = tf.summary.FileWriter("outputs", sess.graph)
 
 def language_train(lang):
-    lang_url = os.path.join(STATS_DIR, lang)
     cst = 0.0
-    if os.path.isdir(lang_url):
-        print "reading ", lang
-        reader.set_lang(lang)
-        lang_data = reader.create_doc_batch()
-        for doc in lang_data:
-            doc_data = lang_data[doc]
-            doc_data["lang"] = lang
-            cst = model.train(doc_data)
+    print "reading ", lang
+    reader.set_lang(lang)
+    lang_data = reader.create_doc_batch()
+    for doc in lang_data:
+        doc_data = lang_data[doc]
+        doc_data["lang"] = lang
+        cst = model.train(doc_data)
     return cst
 
 for epoch in range(TRAIN_ITER):
     for lang in os.listdir(STATS_DIR):
-        cst = language_train(lang)
-        print "epoch-", epoch, ".", lang, " ==> cost: ", cst
+        lang_url = os.path.join(STATS_DIR, lang)
+        if os.path.isdir(lang_url):
+            cst = language_train(lang)
+            print "epoch-", epoch, ".", lang, " ==> cost: ", cst
 writer.close()
 model.save("outputs/stat0m")
