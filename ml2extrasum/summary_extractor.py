@@ -66,9 +66,6 @@ for lang in cont:
     lang_data = cont[lang]
     sizes = get_summary_sizes(lang)
     print lang
-    if lang in ["ar", "sr"]:
-        print "escape"
-        continue
     for doc in lang_data:
         rouge1_scores = cont[lang][doc]["sent"]
         sentences = get_sentences(lang, doc)
