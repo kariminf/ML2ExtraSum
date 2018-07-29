@@ -27,7 +27,8 @@ class Extractor(object):
         self.sentences = sentences
         self.scores = scores
         self.order = np.argsort(scores)
-        self.sorted = sentences[self.order]
+        #print self.order
+        self.sorted = np.array(sentences)[self.order]
 
     def extract_n_sentences(self, n):
         return self.sorted[:n]
@@ -37,7 +38,7 @@ class Extractor(object):
         size = 0
         for sentence in self.sorted:
             size += len(unicode(sentence))
-            if size > maxSize:
+            if size > n:
                 break
             result.append(unicode(sentence))
         return result
