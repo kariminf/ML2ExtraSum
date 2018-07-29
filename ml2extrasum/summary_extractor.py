@@ -19,12 +19,11 @@
 # limitations under the License.
 #
 
-import os, sys, json
+import os
+import json
 import numpy as np
+import codecs
 from extracting.extractor import Extractor
-
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
 SIZE_DIR = "/home/kariminf/Data/ATS/Mss15Test/src/target-length/"
@@ -56,7 +55,7 @@ def write_summary(summary, lang, doc):
     if not os.path.exists(path):
         os.makedirs(path)
     path = os.path.join(path, doc + ".txt")
-    with open(path, "w") as text_file:
+    with codecs.open(path, "w", "utf8") as text_file:
         text_file.write(summary)
 
 path = os.path.join("./outputs/", "test.json")
@@ -64,9 +63,12 @@ path = os.path.join("./outputs/", "test.json")
 cont = json.load(open(path))
 
 for lang in cont:
-    print lang
     lang_data = cont[lang]
     sizes = get_summary_sizes(lang)
+    print lang
+    if lang in ["ar", "sr"]:
+        print "escape"
+        continue
     for doc in lang_data:
         rouge1_scores = cont[lang][doc]["sent"]
         sentences = get_sentences(lang, doc)

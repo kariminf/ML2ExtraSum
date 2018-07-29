@@ -40,5 +40,5 @@ class Extractor(object):
             size += len(unicode(sentence))
             if size > n:
                 break
-            result.append(unicode(sentence))
+            result.append(sentence)
         return result
