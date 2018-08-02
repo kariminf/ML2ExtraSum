@@ -24,11 +24,11 @@ import numpy as np
 class Extractor(object):
 
     def __init__(self, sentences, scores):
-        self.sentences = sentences
-        self.scores = scores
-        self.order = np.argsort(scores)
+        self.sentences = np.array(sentences)
+        self.scores = np.array(scores)
+        self.order = np.argsort(- self.scores) #negate to have descending order
         #print self.order
-        self.sorted = np.array(sentences)[self.order]
+        self.sorted = self.sentences[self.order]
 
     def extract_n_sentences(self, n):
         return self.sorted[:n]
