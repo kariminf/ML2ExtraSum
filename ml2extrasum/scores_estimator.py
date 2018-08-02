@@ -79,6 +79,7 @@ for lang in os.listdir(STATS_DIR):
             json += "\t\t\t\"tf\": " + str(scores["tf"]) + ",\n"
             json += "\t\t\t\"sim\": " + str(scores["sim"]) + ",\n"
             json += "\t\t\t\"pos\": " + str(scores["pos"]) + ",\n"
+            json += "\t\t\t\"size\": " + str(scores["size"]) + ",\n"
             json += "\t\t\t\"sent\": " + str(scores["sent"]) + "\n"
         # The last doc
         json += "\t\t}\n"

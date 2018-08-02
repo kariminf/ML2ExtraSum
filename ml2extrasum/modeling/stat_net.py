@@ -204,6 +204,7 @@ class StatNet(Model):
         scores["tf"] = tfreq.flatten().tolist()
         scores["sim"] = sim.flatten().tolist()
         scores["pos"] = pos.flatten().tolist()
+        scores["size"] = size.flatten().tolist()
         scores["sent"] = sent.flatten().tolist()
 
         return scores

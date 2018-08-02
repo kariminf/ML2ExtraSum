@@ -20,6 +20,7 @@
 #
 
 import numpy as np
+from extractor import Extractor
 
 class SimExtractor(Extractor):
 
@@ -34,10 +35,12 @@ class SimExtractor(Extractor):
     def extract_n_chars(self, n):
         result = []
         size = 0
+        last_id = 0
         for index, sentence in enumerate(self.sorted):
+
             if index > 0: #the first sentence must be added no matter what
                 sent_id = self.sent_ids[index]
-                sent_sims = sims[sent_id]
+                sent_sims = self.sims[sent_id]
                 sim_last = sent_sims[last_id]
                 last_id = int(sent_id)
                 avg_sim = np.mean(sent_sims)
@@ -46,5 +49,7 @@ class SimExtractor(Extractor):
                 size += len(unicode(sentence))
                 if size > n:
                     break
+            else:
+                size += len(unicode(sentence))
             result.append(sentence)
         return result
