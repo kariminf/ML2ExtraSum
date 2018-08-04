@@ -34,45 +34,22 @@ from ml2extrasum.filtering.filter import Filter
 import numpy as np
 
 X = [
-	[[15.0], [20.0], [0.0], ],
-	[[10.0], [12.0], [0.0]],
-	[[10.0], [12.0], [0.0]],
-	[[2.0], [12.0], [13.0]],
-	[[5.0], [0.0], [0.0]]
+	[[0.7], [.7], [0.7], [0.2], [0.2]],
+	[[0.7], [0.6], [0.4], [0.4], [0.4]],
+	[[1.0], [0.4], [0.4], [0.4], [0.3]],
+	[[1.0], [0.4], [0.4], [0.4], [0.3]]
 ]
 
 
 if __name__ == '__main__':
-    x_ = tf.placeholder(tf.float32, shape=[None,None,1], name="x-input")
-	
-    graph = SeqScorer("percentage")
+	x = tf.placeholder(tf.float32, shape=[None,None,1], name="x-input")
 
-    graph.add_LSTM_input(x_, 2, 2).add_LSTM_input(y_, 2, 2) #lstm1, lstm2
+	filterer = Filter(x, "filter")
 
-    graph.add_input(z_)
+	graph = filterer.get_graph()
+	th = filterer.get_threshold()
 
-    graph.add_layer(10, tf.nn.tanh).add_layer(1, tf.nn.tanh)
+	sess = tf.Session()
 
-    output = graph.get_output()
-
-    cost = tf.losses.mean_squared_error(r_, output)
-
-    train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cost)
-
-    init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
-
-    saver = tf.train.Saver()
-
-    for i in range(10000):
-        _, cst = sess.run([train_step, cost], feed_dict={x_: X, y_: Y, z_: Z , r_: RESULT})
-        print i, cst
-
-	#saver.save(sess, "./aak.ckpt")
-    tX = [[[10.0], [5.0]]]
-    tY = [[[10.0], [5.0], [15.0], [8.0]]]
-    tZ = [[0.8]]
-    tRES = [[0.3157894737]]
-
-    print("Predicted: ", sess.run(output,feed_dict={x_: tX, y_: tY, z_: tZ}), " Expected: ", tRES)
+	t, res = sess.run([th, graph], feed_dict={x: X})
+	print t, res

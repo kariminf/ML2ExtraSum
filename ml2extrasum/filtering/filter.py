@@ -19,9 +19,9 @@
 # limitations under the License.
 #
 
-import numpy as np
+import tensorflow as tf
 
-class Filterer(object):
+class Filter(object):
     """Filters a sequence based on a condition.
     By default, the condition is the mean
 
@@ -44,18 +44,20 @@ class Filterer(object):
     def __init__(self, seq, name):
         with tf.name_scope(name) as self.scope:
             self.seq = seq
-            sh = tf.shape(y)
-            y = tf.reshape(y, [sh[0], sh[1]])
+            sh = tf.shape(seq)
+            y = tf.reshape(seq, [sh[0], sh[1]])
             z = tf.zeros(tf.shape(y))
-            threshold = self.get_threshold()
-            y = tf.where(y >= threshold, y, z)
+            self.threshold = self.generate_threshold()
+            y = tf.where(y >= self.threshold, y, z)
             nz = tf.reduce_max(tf.count_nonzero(y, 1))
             y = y[:,:nz]
             self.graph = y
 
-
-    def get_threshold(self):
+    def generate_threshold(self):
         return tf.reduce_mean(self.seq, 1)
 
+    def get_threshold(self):
+        return self.threshold
+
     def get_graph(self):
-        return this.graph
+        return self.graph
