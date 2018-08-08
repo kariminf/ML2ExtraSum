@@ -42,7 +42,7 @@ class Filter(object):
     """
 
     def __init__(self, seq, name):
-        with tf.name_scope(name) as self.scope:
+        with tf.name_scope("Filter-" + name) as self.scope:
             self.seq = seq
             sh = tf.shape(seq)
             y = tf.reshape(seq, [sh[0], sh[1]])
@@ -51,6 +51,7 @@ class Filter(object):
             y = tf.where(y >= self.threshold, y, z)
             nz = tf.reduce_max(tf.count_nonzero(y, 1))
             y = y[:,:nz]
+            y = tf.expand_dims(y, 2)
             self.graph = y
 
     def generate_threshold(self):
