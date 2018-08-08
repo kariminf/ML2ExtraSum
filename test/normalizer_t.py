@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, "..")
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from ml2extrasum.preprocessing.filter import Filter
+from ml2extrasum.preprocessing.normalizer import Normalizer
 
 import numpy as np
 
@@ -40,20 +40,27 @@ X = [
 	[[1.0], [0.4], [0.4], [0.4], [0.3]]
 ]
 
+Y = [
+	[[7.], [5.], [8.], [16.], [9.]],
+	[[9.], [1.], [6.], [10.], [13.]]
+]
+
 
 if __name__ == '__main__':
 	x = tf.placeholder(tf.float32, shape=[None,None,1], name="x-input")
 
-	filterer = Filter(x, "filter")
+	normalizer = Normalizer(x, "n1")
 
-	graph = filterer.get_graph()
-	th = filterer.get_threshold()
+	graph = normalizer.get_graph()
 
 	sess = tf.Session()
 
 	writer = tf.summary.FileWriter("outputs", sess.graph)
 
-	t, res = sess.run([th, graph], feed_dict={x: X})
-	print t, res
+	res = sess.run([graph], feed_dict={x: X})
+	print X, "==>", res
+	print "============================"
+	res = sess.run([graph], feed_dict={x: Y})
+	print Y, "==>", res
 
 	writer.close()

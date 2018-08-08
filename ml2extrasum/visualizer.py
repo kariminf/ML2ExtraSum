@@ -47,7 +47,7 @@ if os.path.isdir(lang_url):
     data["en"] = reader.create_doc_batch()
 
 sess = model.get_session()
-writer = tf.summary.FileWriter("models", sess.graph)
+writer = tf.summary.FileWriter("outputs", sess.graph)
 lang_data = data["en"]
 for doc in lang_data:
     doc_data = lang_data[doc]
