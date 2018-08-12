@@ -30,8 +30,8 @@ from reading.limited_reader import LimitedReader
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
-TRAIN_ITER = 1
+STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
+TRAIN_ITER = 50
 LEARNING_RATE = 0.05
 
 # by default:
