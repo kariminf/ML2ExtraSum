@@ -37,31 +37,35 @@ def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
-    with tf.name_scope(name) as scope:
-        with tf.name_scope(name + "_features") as scope2:
+    with tf.name_scope(name):
+        with tf.name_scope("features"):
 
-            # sentence to document sum normalization (S2Dsum)
-            # S2Dsum(i) = sum_i (score(i))/sum_D (score(D))
-            # score(k) can be words tf, sentences sim, etc.
-            sent_sum = tf.reduce_sum(sent_seq, axis=1)
-            doc_sum = tf.reduce_sum(doc_seq, axis=1)
-            s2dsum = tf.div(sent_sum, doc_sum, name="S2Dsum")
+            with tf.name_scope("prepare"):
+                sent_seq_len = tf.to_float(tf.count_nonzero(sent_seq, axis=1)) + 1.0
+                doc_seq_len = tf.to_float(tf.count_nonzero(doc_seq, axis=1)) + 1.0
 
-            # sentence to document mean normalization (S2Dmean)
-            # S2Dmean(i) = mean(score(i))/mean(score(D))
-            # score(k) can be words tf, sentences sim, etc.
-            sent_mean = tf.reduce_mean(sent_seq, axis=1)
-            doc_mean = tf.reduce_mean(doc_seq, axis=1)
-            s2dmean = tf.div(sent_mean, doc_mean, name="S2Dmean")
+            with tf.name_scope("S2Dsum"):
+                # sentence to document sum normalization (S2Dsum)
+                # S2Dsum(i) = (|fD| * sum (fi))/(|fi| * sum (fD))
+                # fk can be words tf in k, similarities in k, etc.
+                sent_sum = tf.multiply(doc_seq_len, tf.reduce_sum(sent_seq, axis=1))
+                doc_sum = tf.multiply(sent_seq_len, tf.reduce_sum(doc_seq, axis=1))
+                s2dsum = tf.div(sent_sum, doc_sum)
+                #s2dsum = tf.stop_gradient(s2dsum)
 
-            # sentence to document max-min normalization (S2Dmxmn)
-            # S2Dmean(i) = mean(score(i))/mean(score(D))
-            # score(k) can be words tf, sentences sim, etc.
-            sent_max = tf.reduce_max(sent_seq, axis=1)
-            sent_min = tf.reduce_min(sent_seq, axis=1)
-            doc_max = tf.reduce_max(doc_seq, axis=1)
-            doc_min = tf.reduce_min(doc_seq, axis=1)
-            s2dmxmn = tf.div((sent_max - sent_min + 1), (doc_max - doc_min + 1), name="S2DS2Dmxmn")
+            with tf.name_scope("S2Dmxmn"):
+                # sentence to document intervall normalization (S2Dmxmn)
+                # S2Dmean(i) = mean(f(i))/mean(f(D))
+                # f(k) can be words tf, sentences sim, etc.
+                sent_max = tf.reduce_max(sent_seq, axis=1)
+                sent_min = tf.reduce_min(sent_seq, axis=1)
+                doc_max = tf.reduce_max(doc_seq, axis=1)
+                doc_min = tf.reduce_min(doc_seq, axis=1)
+                sent_diff = tf.multiply(doc_seq_len, (sent_max - sent_min + 1.0))
+                doc_diff = tf.multiply(sent_seq_len, (doc_max - doc_min + 1.0))
+                s2dmxmn = tf.div(sent_diff, doc_diff)
+                #s2dmxmn = tf.stop_gradient(s2dmxmn)
+
 
         estim = SeqScorer(name + "_estim")
         estim.add_LSTM_input(sent_seq, 10, 1, 2).add_LSTM_input(doc_seq, 10, 1, 2)
@@ -69,46 +73,58 @@ def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
         estim.add_output(1, tf.nn.sigmoid)
         estim = estim.get_output()
 
-        graph = Scorer(name + "_score")
-        graph.add_input(lang).add_input(estim).add_input(s2dsum)
-        graph.add_input(s2dmean).add_input(s2dmxmn)
+        graph = Scorer("scorer")
+        graph.add_input(lang).add_input(estim).add_input(s2dsum).add_input(s2dmxmn)
         graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
         graph.add_output(1, tf.nn.sigmoid)
         return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
-    with tf.name_scope(name) as scope:
-        with tf.name_scope(name + "_features") as scope2:
-            doc_maxsize = tf.reduce_max(doc_size_seq, axis=1, name="DmaxSIZE")
-            doc_meansize = tf.reduce_mean(doc_size_seq, axis=1, name="DmeanSIZE")
+    with tf.name_scope(name):
+        with tf.name_scope("features"):
 
-            max_max = doc_maxsize * 0.7
-            max_mean = doc_meansize * 1.3
+            with tf.name_scope("prepare"):
+                doc_maxsize = tf.reduce_max(doc_size_seq, axis=1, name="DmaxSIZE")
+                doc_meansize = tf.reduce_mean(doc_size_seq, axis=1, name="DmeanSIZE")
 
-            min_max = doc_maxsize * 0.3
-            min_mean = doc_meansize * 0.7
+                max_max = doc_maxsize * 0.7
+                max_mean = doc_meansize * 1.3
+
+                min_max = doc_maxsize * 0.3
+                min_mean = doc_meansize * 0.7
+
+                ones = tf.ones(tf.shape(sent_size))
+                zeros = tf.zeros(tf.shape(sent_size))
+
 
             # Maximum normalization (MxN)
             # MxN = (Lmax - Li)/Lmax if Li <= Lmax; 1 otherwise
             # ==================================================
-            ones = tf.ones(tf.shape(sent_size))
+            with tf.name_scope("MxNMax"):
             # Maximum normalization based on maximum length
-            mxn = (max_max - sent_size)/max_max
-            mxnmax = tf.where(sent_size <= max_max, ones, mxn, name="MxNMax")
+                mxn = (max_max - sent_size)/max_max
+                mxnmax = tf.where(sent_size <= max_max, ones, mxn)
+                #mxnmax = tf.stop_gradient(mxnmax)
+            with tf.name_scope("MxNMean"):
             # Maximum normalization based on mean length
-            mxn = (max_mean - sent_size)/max_mean
-            mxnmean = tf.where(sent_size <= max_mean, ones, mxn, name="MxNMean")
+                mxn = (max_mean - sent_size)/max_mean
+                mxnmean = tf.where(sent_size <= max_mean, ones, mxn)
+                #mxnmean = tf.stop_gradient(mxnmean)
 
             # Minimum normalization (MnN)
             # MnN = (Li - Lmin)/Li if Li >= Lmin; 0 otherwise
+            # (Li - Lmin)/(Li + 0.1 ) in case Li = 0
             # ==================================================
-            zeros = tf.zeros(tf.shape(sent_size))
+            with tf.name_scope("MnNMax"):
             # Minimum normalization based on maximum length
-            mnn = (sent_size - min_max)/sent_size
-            mnnmax = tf.where(sent_size >= min_max, zeros, mxn, name="MnNMax")
+                mnn = (sent_size - min_max)/(sent_size + 0.1)
+                mnnmax = tf.where(sent_size >= min_max, zeros, mnn)
+                #mnnmax = tf.stop_gradient(mnnmax)
+            with tf.name_scope("MnNMean"):
             # Minimum normalization based on mean length
-            mnn = (sent_size - min_mean)/sent_size
-            mnnmean = tf.where(sent_size >= min_mean, zeros, mxn, name="MnNMean")
+                mnn = (sent_size - min_mean)/(sent_size + 0.1)
+                mnnmean = tf.where(sent_size >= min_mean, zeros, mnn)
+                #mnnmean = tf.stop_gradient(mnnmean)
 
         estim = SeqScorer(name + "_estim")
         estim.add_input(sent_size).add_LSTM_input(doc_size_seq, 10, 1, 2)
@@ -116,7 +132,7 @@ def get_size_scorer(name, lang, sent_size, doc_size_seq):
         estim.add_output(1, tf.nn.sigmoid)
         estim = estim.get_output()
 
-        graph = SeqScorer(name + "_score")
+        graph = SeqScorer("scorer")
         graph.add_input(lang).add_input(estim)
         graph.add_input(mxnmax).add_input(mxnmean)
         graph.add_input(mnnmax).add_input(mnnmean)
@@ -125,24 +141,34 @@ def get_size_scorer(name, lang, sent_size, doc_size_seq):
         return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
-    with tf.name_scope(name) as scope:
-        with tf.name_scope(name + "_features") as scope2:
-            # We add 1 to sent_pos because positions start from 0
-            # Direct proportion (DP)
-            # dp(i) = (n - i + 1)/n | i: sent pos, n: doc size
-            dp = tf.div((doc_size - sent_pos), doc_size, name="DP")
-            # Inverse proportion (IP)
-            # ip(i) = 1/i
-            ip = tf.div(1.0, (sent_pos + 1.0), name="IP")
-            # Position proportion (PP)
-            # pp(i) = 1/(n-i+1)
-            pp = tf.div(1.0, (doc_size - sent_pos), name="PP")
-            # Geometric sequence (GS)
-            # gs(i) = (1/2)^{i-1}
-            gs = tf.pow(0.5, sent_pos, name="GS")
-            # Max proportion (MP)
-            # mp(i) = max(1/i, 1/(n-i+1))
-            mp = tf.maximum(ip, pp, name="MP")
+    with tf.name_scope(name):
+        with tf.name_scope("features"):
+            with tf.name_scope("DP"):
+                # We add 1 to sent_pos because positions start from 0
+                # Direct proportion (DP)
+                # dp(i) = (n - i + 1)/n | i: sent pos, n: doc size
+                dp = tf.div((doc_size - sent_pos), doc_size)
+                #dp = tf.stop_gradient(dp)
+            with tf.name_scope("IP"):
+                # Inverse proportion (IP)
+                # ip(i) = 1/i
+                ip = tf.div(1.0, (sent_pos + 1.0))
+                #ip = tf.stop_gradient(ip)
+            with tf.name_scope("PP"):
+                # Position proportion (PP)
+                # pp(i) = 1/(n-i+1)
+                pp = tf.div(1.0, (doc_size - sent_pos))
+                #pp = tf.stop_gradient(pp)
+            with tf.name_scope("GS"):
+                # Geometric sequence (GS)
+                # gs(i) = (1/2)^{i-1}
+                gs = tf.pow(0.5, sent_pos)
+                #gs = tf.stop_gradient(gs)
+            with tf.name_scope("MP"):
+                # Max proportion (MP)
+                # mp(i) = max(1/i, 1/(n-i+1))
+                mp = tf.maximum(ip, pp)
+                #mp = tf.stop_gradient(mp)
 
         estim = Scorer(name + "_estim")
         estim.add_input(sent_pos).add_input(doc_size)
@@ -150,7 +176,7 @@ def get_position_scorer(name, lang, sent_pos, doc_size):
         estim.add_output(1, tf.nn.sigmoid)
         estim = estim.get_output()
 
-        graph = Scorer(name + "_score")
+        graph = Scorer("scorer")
         graph.add_input(lang).add_input(estim)
         graph.add_input(dp).add_input(ip).add_input(pp)
         graph.add_input(gs).add_input(mp)
@@ -174,7 +200,7 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(sim)
     graph.add_input(size)
     graph.add_input(pos)
-    graph.add_hidden(50, HIDDEN_ACT).add_hidden(20, HIDDEN_ACT) # 2 hidden layers
+    graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(5, HIDDEN_ACT) # 2 hidden layers
     graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
@@ -210,32 +236,33 @@ class StatNet(Model):
 
         # Preprocessing
         # ============================
+        with tf.name_scope("preprocess") as scope:
 
-        # term frequencies in document
-        doc_tf_seq_norm = Filter(self.doc_tf_seq, "doc_tf_seq").get_graph()
+            # term frequencies in document
+            doc_tf_seq_norm = Filter(self.doc_tf_seq, "doc_tf_seq").get_graph()
 
-        # all sentences similarities in a document
-        doc_sim_seq_norm = Filter(self.doc_sim_seq, "doc_sim_seq").get_graph()
+            # all sentences similarities in a document
+            doc_sim_seq_norm = Filter(self.doc_sim_seq, "doc_sim_seq").get_graph()
 
-        # all sentences sizes in a document
-        doc_size_seq_norm = Filter(self.doc_size_seq, "doc_size_seq").get_graph()
+            # all sentences sizes in a document
+            doc_size_seq_norm = Filter(self.doc_size_seq, "doc_size_seq").get_graph()
 
-        # document size
-        # Can't be normalized (for now) because a document is a batch
-        doc_size_norm = self.doc_size
+            # document size
+            # Can't be normalized (for now) because a document is a batch
+            doc_size_norm = self.doc_size
 
-        # term frequencies (in the document) of a sentence
-        sent_tf_seq_norm = Filter(self.sent_tf_seq, "sent_tf_seq").get_graph()
+            # term frequencies (in the document) of a sentence
+            sent_tf_seq_norm = Filter(self.sent_tf_seq, "sent_tf_seq").get_graph()
 
-        # similarities of this sentence with others
-        sent_sim_seq_norm = Filter(self.sent_sim_seq, "sent_sim_seq").get_graph()
+            # similarities of this sentence with others
+            sent_sim_seq_norm = Filter(self.sent_sim_seq, "sent_sim_seq").get_graph()
 
-        # sentence size
-        sent_size_norm = self.sent_size
+            # sentence size
+            sent_size_norm = self.sent_size
 
-        # sentence position
-        # No normalization because of doc_size
-        sent_pos_norm = self.sent_pos
+            # sentence position
+            # No normalization because of doc_size
+            sent_pos_norm = self.sent_pos
 
 
         #          Scorers
