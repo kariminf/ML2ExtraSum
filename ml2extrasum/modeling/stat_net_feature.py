@@ -45,12 +45,46 @@ def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
     return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
-    graph = SeqScorer(name)
-    graph.add_input(lang).add_input(sent_size)
-    graph.add_LSTM_input(doc_size_seq, 50, 1, 2)
-    graph.add_hidden(50, HIDDEN_ACT).add_hidden(50, HIDDEN_ACT) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
-    return graph.get_output()
+    with tf.name_scope(name) as scope:
+        with tf.name_scope(name + "_preprocess") as scope2:
+            doc_maxsize = tf.reduce_max(doc_size_seq, axis=1, name="DmaxSIZE")
+            doc_meansize = tf.reduce_mean(doc_size_seq, axis=1, name="DmeanSIZE")
+
+            max_max = doc_maxsize * 0.7
+            max_mean = doc_meansize * 1.3
+
+            min_max = doc_maxsize * 0.3
+            min_mean = doc_meansize * 0.7
+
+            # Maximum normalization (MxN)
+            # MxN = (Lmax - Li)/Lmax if Li <= Lmax; 1 otherwise
+            # ==================================================
+            ones = tf.ones(tf.shape(sent_size))
+            # Maximum normalization based on maximum length
+            mxn = (max_max - sent_size)/max_max
+            mxnmax = tf.where(sent_size <= max_max, ones, mxn, name="MxNMax")
+            # Maximum normalization based on mean length
+            mxn = (max_mean - sent_size)/max_mean
+            mxnmean = tf.where(sent_size <= max_mean, ones, mxn, name="MxNMean")
+
+            # Minimum normalization (MnN)
+            # MnN = (Li - Lmin)/Li if Li >= Lmin; 0 otherwise
+            # ==================================================
+            zeros = tf.zeros(tf.shape(sent_size))
+            # Minimum normalization based on maximum length
+            mnn = (sent_size - min_max)/sent_size
+            mnnmax = tf.where(sent_size >= min_max, zeros, mxn, name="MnNMax")
+            # Minimum normalization based on mean length
+            mnn = (sent_size - min_mean)/sent_size
+            mnnmean = tf.where(sent_size >= min_mean, zeros, mxn, name="MnNMean")
+
+        graph = SeqScorer(name + "_score")
+        graph.add_input(mxnmax).add_input(mxnmean)
+        graph.add_input(mnnmax).add_input(mnnmean)
+        graph.add_LSTM_input(doc_size_seq, 10, 1, 1)
+        graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(50, HIDDEN_ACT) # 2 hidden layers
+        graph.add_output(1, tf.nn.sigmoid)
+        return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     with tf.name_scope(name) as scope:
@@ -74,7 +108,7 @@ def get_position_scorer(name, lang, sent_pos, doc_size):
         graph = Scorer(name + "_score")
         graph.add_input(dp).add_input(ip).add_input(pp)
         graph.add_input(gs).add_input(mp)
-        graph.add_hidden(10, HIDDEN_ACT).add_hidden(10, HIDDEN_ACT) # 2 hidden layers
+        graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
         graph.add_output(1, tf.nn.sigmoid)
         return graph.get_output()
 
