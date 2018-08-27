@@ -37,16 +37,48 @@ def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 def get_tf_sim_scorer(name, lang, sent_seq, doc_seq):
-    graph = SeqScorer(name)
-    graph.add_input(lang)
-    graph.add_LSTM_input(sent_seq, 50, 1, 2).add_LSTM_input(doc_seq, 50, 1, 2)
-    graph.add_hidden(50, HIDDEN_ACT).add_hidden(50, HIDDEN_ACT) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
-    return graph.get_output()
+    with tf.name_scope(name) as scope:
+        with tf.name_scope(name + "_features") as scope2:
+
+            # sentence to document sum normalization (S2Dsum)
+            # S2Dsum(i) = sum_i (score(i))/sum_D (score(D))
+            # score(k) can be words tf, sentences sim, etc.
+            sent_sum = tf.reduce_sum(sent_seq, axis=1)
+            doc_sum = tf.reduce_sum(doc_seq, axis=1)
+            s2dsum = tf.div(sent_sum, doc_sum, name="S2Dsum")
+
+            # sentence to document mean normalization (S2Dmean)
+            # S2Dmean(i) = mean(score(i))/mean(score(D))
+            # score(k) can be words tf, sentences sim, etc.
+            sent_mean = tf.reduce_mean(sent_seq, axis=1)
+            doc_mean = tf.reduce_mean(doc_seq, axis=1)
+            s2dmean = tf.div(sent_mean, doc_mean, name="S2Dmean")
+
+            # sentence to document max-min normalization (S2Dmxmn)
+            # S2Dmean(i) = mean(score(i))/mean(score(D))
+            # score(k) can be words tf, sentences sim, etc.
+            sent_max = tf.reduce_max(sent_seq, axis=1)
+            sent_min = tf.reduce_min(sent_seq, axis=1)
+            doc_max = tf.reduce_max(doc_seq, axis=1)
+            doc_min = tf.reduce_min(doc_seq, axis=1)
+            s2dmxmn = tf.div((sent_max - sent_min + 1), (doc_max - doc_min + 1), name="S2DS2Dmxmn")
+
+        estim = SeqScorer(name + "_estim")
+        estim.add_LSTM_input(sent_seq, 10, 1, 2).add_LSTM_input(doc_seq, 10, 1, 2)
+        estim.add_hidden(5, HIDDEN_ACT)
+        estim.add_output(1, tf.nn.sigmoid)
+        estim = estim.get_output()
+
+        graph = Scorer(name + "_score")
+        graph.add_input(lang).add_input(estim).add_input(s2dsum)
+        graph.add_input(s2dmean).add_input(s2dmxmn)
+        graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
+        graph.add_output(1, tf.nn.sigmoid)
+        return graph.get_output()
 
 def get_size_scorer(name, lang, sent_size, doc_size_seq):
     with tf.name_scope(name) as scope:
-        with tf.name_scope(name + "_preprocess") as scope2:
+        with tf.name_scope(name + "_features") as scope2:
             doc_maxsize = tf.reduce_max(doc_size_seq, axis=1, name="DmaxSIZE")
             doc_meansize = tf.reduce_mean(doc_size_seq, axis=1, name="DmeanSIZE")
 
@@ -78,17 +110,23 @@ def get_size_scorer(name, lang, sent_size, doc_size_seq):
             mnn = (sent_size - min_mean)/sent_size
             mnnmean = tf.where(sent_size >= min_mean, zeros, mxn, name="MnNMean")
 
+        estim = SeqScorer(name + "_estim")
+        estim.add_input(sent_size).add_LSTM_input(doc_size_seq, 10, 1, 2)
+        estim.add_hidden(5, HIDDEN_ACT)
+        estim.add_output(1, tf.nn.sigmoid)
+        estim = estim.get_output()
+
         graph = SeqScorer(name + "_score")
+        graph.add_input(lang).add_input(estim)
         graph.add_input(mxnmax).add_input(mxnmean)
         graph.add_input(mnnmax).add_input(mnnmean)
-        graph.add_LSTM_input(doc_size_seq, 10, 1, 1)
         graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(50, HIDDEN_ACT) # 2 hidden layers
         graph.add_output(1, tf.nn.sigmoid)
         return graph.get_output()
 
 def get_position_scorer(name, lang, sent_pos, doc_size):
     with tf.name_scope(name) as scope:
-        with tf.name_scope(name + "_preprocess") as scope2:
+        with tf.name_scope(name + "_features") as scope2:
             # We add 1 to sent_pos because positions start from 0
             # Direct proportion (DP)
             # dp(i) = (n - i + 1)/n | i: sent pos, n: doc size
@@ -105,7 +143,15 @@ def get_position_scorer(name, lang, sent_pos, doc_size):
             # Max proportion (MP)
             # mp(i) = max(1/i, 1/(n-i+1))
             mp = tf.maximum(ip, pp, name="MP")
+
+        estim = Scorer(name + "_estim")
+        estim.add_input(sent_pos).add_input(doc_size)
+        estim.add_hidden(5, HIDDEN_ACT)
+        estim.add_output(1, tf.nn.sigmoid)
+        estim = estim.get_output()
+
         graph = Scorer(name + "_score")
+        graph.add_input(lang).add_input(estim)
         graph.add_input(dp).add_input(ip).add_input(pp)
         graph.add_input(gs).add_input(mp)
         graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
@@ -114,12 +160,10 @@ def get_position_scorer(name, lang, sent_pos, doc_size):
 
 def get_language_scorer(name, doc_tf_seq, doc_sim_seq, doc_size_seq):
     graph = SeqScorer(name)
-    graph.add_LSTM_input(doc_tf_seq, 50, 1)
-    graph.add_LSTM_input(doc_sim_seq, 50, 1)
-    graph.add_LSTM_input(doc_size_seq, 50, 1)
-    #graph.add_hidden(50, tf.nn.relu)#.add_hidden(50, tf.nn.relu) # 2 hidden layers
-    # We want to represent the language in a two demension space
-    # Using a linear function and values greater than 0
+    graph.add_LSTM_input(doc_tf_seq, 10, 2)
+    graph.add_LSTM_input(doc_sim_seq, 10, 2)
+    graph.add_LSTM_input(doc_size_seq, 10, 2)
+    graph.add_hidden(20, HIDDEN_ACT)
     graph.add_output(2, tf.nn.sigmoid)
     return graph.get_output()
 
