@@ -22,7 +22,7 @@
 import os
 import numpy
 import tensorflow as tf
-from modeling.stat_net_reg2 import StatNet
+from modeling.stat_net_feature import StatNet
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
 
@@ -31,7 +31,7 @@ def repeat_vector(vector, nbr):
     return [vector] * nbr
 
 STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats0+/"
-TRAIN_ITER = 10
+TRAIN_ITER = 1
 LEARNING_RATE = 0.05
 
 # by default:
