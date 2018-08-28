@@ -23,7 +23,7 @@ import os
 import json
 import numpy as np
 import tensorflow as tf
-from modeling.stat_net_norm import StatNet
+from modeling.stat_net_feature import StatNet
 
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
