@@ -43,11 +43,11 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(sim)
     graph.add_input(size)
     graph.add_input(pos)
-    graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(5, HIDDEN_ACT) # 2 hidden layers
+    graph.add_hidden(50, HIDDEN_ACT)#.add_hidden(5, HIDDEN_ACT) # 2 hidden layers
     graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 
-def get_tf_sim_scorer(name, sent_seq, doc_seq):
+def get_tf_sim_preprocess(name, sent_seq, doc_seq):
     with tf.name_scope(name):
 
         with tf.name_scope("prepare"):
@@ -77,12 +77,12 @@ def get_tf_sim_scorer(name, sent_seq, doc_seq):
             #s2dmxmn = tf.stop_gradient(s2dmxmn)
     return s2dsum, s2dmxmn
 
-def create_scorer(name, inputs):
+def create_scorer(name, inputs, nbr_outs):
     graph = Scorer(name)
     for input in inputs:
         graph.add_input(input)
-    graph.add_hidden(20, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
-    graph.add_output(1, tf.nn.sigmoid)
+    graph.add_hidden(50, HIDDEN_ACT)#.add_hidden(10, HIDDEN_ACT) # 2 hidden layers
+    graph.add_output(nbr_outs, tf.nn.sigmoid)
     return graph.get_output()
 
 class StatNet(Model):
@@ -146,9 +146,9 @@ class StatNet(Model):
                     mp = tf.maximum(ip, pp)
                     #mp = tf.stop_gradient(mp)
 
-            s2dsum_tf, s2dmxmn_tf = get_tf_sim_scorer("tf", self.sent_tf_seq, self.doc_tf_seq)
+            s2dsum_tf, s2dmxmn_tf = get_tf_sim_preprocess("tf", self.sent_tf_seq, self.doc_tf_seq)
 
-            s2dsum_sim, s2dmxmn_sim = get_tf_sim_scorer("sim", self.sent_sim_seq, self.doc_sim_seq)
+            s2dsum_sim, s2dmxmn_sim = get_tf_sim_preprocess("sim", self.sent_sim_seq, self.doc_sim_seq)
 
             with tf.name_scope("sentSize"):
 
@@ -215,12 +215,12 @@ class StatNet(Model):
         self.lang_scorer = create_scorer("lang", [
                 doc_tf_perc, max_doc_sim, mean_doc_sim,
                 doc_sim_perc, doc_size_perc
-                ])
+                ],2)
 
-        self.tf_scorer = create_scorer("tf", [self.lang_scorer,s2dsum_tf, s2dmxmn_tf])
-        self.sim_scorer = create_scorer("sim", [self.lang_scorer,s2dsum_sim, s2dmxmn_sim])
-        self.size_scorer = create_scorer("size", [self.lang_scorer,mxnmax, mxnmean, mnnmax, mnnmean])
-        self.pos_scorer = create_scorer("pos", [self.lang_scorer,dp, ip, pp, gs, mp])
+        self.tf_scorer = create_scorer("tf", [self.lang_scorer,s2dsum_tf, s2dmxmn_tf],1)
+        self.sim_scorer = create_scorer("sim", [self.lang_scorer,s2dsum_sim, s2dmxmn_sim],1)
+        self.size_scorer = create_scorer("size", [self.lang_scorer,mxnmax, mxnmean, mnnmax, mnnmean],1)
+        self.pos_scorer = create_scorer("pos", [self.lang_scorer,dp, ip, pp, gs, mp],1)
 
         self.graph = get_sentence_scorer("sent", self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer)
 
