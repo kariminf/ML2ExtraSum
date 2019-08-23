@@ -23,6 +23,8 @@ import os
 
 PEER_DIR = "/home/kariminf/Data/ATS/Mss15Test/tests/testing2018/"
 MODEL_DIR = "/home/kariminf/Data/ATS/Mss15Test/model/"
+SCORE = ["sent", "tf", "sim", "pos", "size", "rouge1", "sums"]
+EXTR = ["plain", "sim"]
 
 
 for lang in os.listdir(PEER_DIR):
@@ -31,22 +33,27 @@ for lang in os.listdir(PEER_DIR):
         print lang
         xmlcontent = "<ROUGE-EVAL version=\"1.0\">\n"
         for doc in os.listdir(lang_url):
-            xmlcontent += "<EVAL ID=\"" + doc[:-4] + "\">\n"
-            xmlcontent += "<PEER-ROOT>\n"
-            xmlcontent += PEER_DIR + lang + "\n"
-            xmlcontent += "</PEER-ROOT>\n"
-            xmlcontent += "<MODEL-ROOT>\n"
-            xmlcontent += MODEL_DIR + lang + "\n"
-            xmlcontent += "</MODEL-ROOT>\n"
-            xmlcontent += "<INPUT-FORMAT TYPE=\"SPL\">\n"
-            xmlcontent += "</INPUT-FORMAT>\n"
-            xmlcontent += "<PEERS>\n"
-            xmlcontent += "<P ID=\"P\">" + doc + "</P>\n"
-            xmlcontent += "</PEERS>\n"
-            xmlcontent += "<MODELS>\n"
-            xmlcontent += "<M ID=\"M"+doc+"\">" + doc + "</M>\n"
-            xmlcontent += "</MODELS>\n"
-            xmlcontent += "</EVAL>\n"
+            doc_url = os.path.join(lang_url, doc)
+            if os.path.isdir(doc_url):
+                xmlcontent += "<EVAL ID=\"" + doc + "\">\n"
+                xmlcontent += "<PEER-ROOT>\n"
+                xmlcontent += PEER_DIR + lang + "/" + doc + "\n"
+                xmlcontent += "</PEER-ROOT>\n"
+                xmlcontent += "<MODEL-ROOT>\n"
+                xmlcontent += MODEL_DIR + lang + "\n"
+                xmlcontent += "</MODEL-ROOT>\n"
+                xmlcontent += "<INPUT-FORMAT TYPE=\"SPL\">\n"
+                xmlcontent += "</INPUT-FORMAT>\n"
+                xmlcontent += "<PEERS>\n"
+                for score in SCORE:
+                    for extr in EXTR:
+                        pname = score + "_" + extr
+                        xmlcontent += "<P ID=\"" + pname + "\">" + pname + ".txt</P>\n"
+                xmlcontent += "</PEERS>\n"
+                xmlcontent += "<MODELS>\n"
+                xmlcontent += "<M ID=\"M"+doc+"\">" + doc + ".txt</M>\n"
+                xmlcontent += "</MODELS>\n"
+                xmlcontent += "</EVAL>\n"
         xmlcontent += "</ROUGE-EVAL>"
 
         with open(PEER_DIR + lang + "-2018.xml", "w") as f:
