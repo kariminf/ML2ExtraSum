@@ -22,6 +22,8 @@ In our case, the language clusterer represent each language as a two dimentional
 
 ## How to use
 
+Go [HERE](http://multiling.iit.demokritos.gr/pages/view/1532/task-mss-single-document-summarization-data-and-information) to download MultiLing2015 MSS data. You need just testing data, but you can download training data as well. 
+
 Go to [Release-1.0.0](https://github.com/kariminf/ML2ExtraSum/releases/tag/1.0.0)
 and download the stats files (training and testing).
 
