@@ -64,7 +64,7 @@ def get_tf_sim_preprocess(name, sent_seq, doc_seq):
             #s2dsum = tf.stop_gradient(s2dsum)
 
         with tf.name_scope("S2Dmxmn"):
-            # sentence to document intervall normalization (S2Dmxmn)
+            # sentence to document interval normalization (S2Dmxmn)
             # S2Dmean(i) = mean(f(i))/mean(f(D))
             # f(k) can be words tf, sentences sim, etc.
             sent_max = tf.reduce_max(sent_seq, axis=1)
@@ -130,21 +130,11 @@ class StatNet(Model):
                     # ip(i) = 1/i
                     ip = tf.div(1.0, (self.sent_pos + 1.0))
                     #ip = tf.stop_gradient(ip)
-                with tf.name_scope("PP"):
-                    # Position proportion (PP)
-                    # pp(i) = 1/(n-i+1)
-                    pp = tf.div(1.0, (self.doc_size - self.sent_pos))
-                    #pp = tf.stop_gradient(pp)
                 with tf.name_scope("GS"):
                     # Geometric sequence (GS)
                     # gs(i) = (1/2)^{i-1}
                     gs = tf.pow(0.5, self.sent_pos)
                     #gs = tf.stop_gradient(gs)
-                with tf.name_scope("MP"):
-                    # Max proportion (MP)
-                    # mp(i) = max(1/i, 1/(n-i+1))
-                    mp = tf.maximum(ip, pp)
-                    #mp = tf.stop_gradient(mp)
 
             s2dsum_tf, s2dmxmn_tf = get_tf_sim_preprocess("tf", self.sent_tf_seq, self.doc_tf_seq)
 
@@ -172,12 +162,12 @@ class StatNet(Model):
                 with tf.name_scope("MxNMax"):
                 # Maximum normalization based on maximum length
                     mxn = (max_max - self.sent_size)/max_max
-                    mxnmax = tf.where(self.sent_size <= max_max, ones, mxn)
+                    mxnmax = tf.where(self.sent_size > max_max, ones, mxn)
                     #mxnmax = tf.stop_gradient(mxnmax)
                 with tf.name_scope("MxNMean"):
                 # Maximum normalization based on mean length
                     mxn = (max_mean - self.sent_size)/max_mean
-                    mxnmean = tf.where(self.sent_size <= max_mean, ones, mxn)
+                    mxnmean = tf.where(self.sent_size > max_mean, ones, mxn)
                     #mxnmean = tf.stop_gradient(mxnmean)
 
                 # Minimum normalization (MnN)
@@ -187,12 +177,12 @@ class StatNet(Model):
                 with tf.name_scope("MnNMax"):
                 # Minimum normalization based on maximum length
                     mnn = (self.sent_size - min_max)/(self.sent_size + 0.1)
-                    mnnmax = tf.where(self.sent_size >= min_max, zeros, mnn)
+                    mnnmax = tf.where(self.sent_size < min_max, zeros, mnn)
                     #mnnmax = tf.stop_gradient(mnnmax)
                 with tf.name_scope("MnNMean"):
                 # Minimum normalization based on mean length
                     mnn = (self.sent_size - min_mean)/(self.sent_size + 0.1)
-                    mnnmean = tf.where(self.sent_size >= min_mean, zeros, mnn)
+                    mnnmean = tf.where(self.sent_size < min_mean, zeros, mnn)
                     #mnnmean = tf.stop_gradient(mnnmean)
             with tf.name_scope("docTF"):
                 max_doc_tf = tf.reduce_max(self.doc_tf_seq, axis=1)
@@ -220,7 +210,7 @@ class StatNet(Model):
         self.tf_scorer = create_scorer("tf", [self.lang_scorer,s2dsum_tf, s2dmxmn_tf],1)
         self.sim_scorer = create_scorer("sim", [self.lang_scorer,s2dsum_sim, s2dmxmn_sim],1)
         self.size_scorer = create_scorer("size", [self.lang_scorer,mxnmax, mxnmean, mnnmax, mnnmean],1)
-        self.pos_scorer = create_scorer("pos", [self.lang_scorer,dp, ip, pp, gs, mp],1)
+        self.pos_scorer = create_scorer("pos", [self.lang_scorer,dp, ip, gs],1)
 
         self.graph = get_sentence_scorer("sent", self.lang_scorer, self.tf_scorer, self.sim_scorer, self.size_scorer, self.pos_scorer)
 
