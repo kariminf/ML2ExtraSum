@@ -28,8 +28,8 @@ import tensorflow as tf
 
 from scoring.scorer import Scorer
 from scoring.seq_scorer import SeqScorer
-from preprocessing.filter import Filter
-from preprocessing.normalizer import Normalizer
+from transforming.filter import Filter
+from transforming.normalizer import Normalizer
 
 HIDDEN_ACT = tf.nn.relu
 
