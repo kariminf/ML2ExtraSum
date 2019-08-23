@@ -21,8 +21,24 @@
 
 import json, os
 
+from modeling.stat_net_basic import StatNet as SBasic
+from modeling.stat_net_filter import StatNet as SFilter
+from modeling.stat_net_norm import StatNet as SNorm
+from modeling.stat_net_pure import StatNet as SPure
+
 CONFIG = "config.json"
+
+MODELING = {
+    "basic": lambda: SBasic,
+    "filter": lambda: SFilter,
+    "norm": lambda: SNorm(),
+    "pure": lambda: SPure
+}
 
 def get_config():
     path = os.path.join("./", CONFIG)
     return json.load(open(path))
+
+def new_model(name):
+    func = MODELING.get(name, lambda: SBasic)
+    return func()

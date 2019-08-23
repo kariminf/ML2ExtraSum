@@ -19,38 +19,37 @@
 # limitations under the License.
 #
 
-import os
+import os, sys
 import json
 import numpy as np
 import tensorflow as tf
-from modeling.stat_net_pure import StatNet
 
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
 
+import utils
 
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
-#MODEL_DIR = "/home/kariminf/Data/ATS/Models/en_ar_100it/stat0Model.ckpt"
+config = utils.get_config()
 
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-model = StatNet()
+model = utils.new_model(config["StatNet"])
 
-model.restore("outputs/stat0m")
+model.restore(config["MOD_DIR"] + config["MOD_NAME"])
 
 # Data reading
 # ===============
 data = {}
 
-reader = LimitedReader(STATS_DIR)
+reader = LimitedReader(config["TEST_DIR"])
 
 json = "{"
 
 lang_next = False
 
-for lang in os.listdir(STATS_DIR):
-    lang_url = os.path.join(STATS_DIR, lang)
+for lang in os.listdir(config["TEST_DIR"]):
+    lang_url = os.path.join(config["TEST_DIR"], lang)
     if os.path.isdir(lang_url):
         print "reading ", lang
         reader.set_lang(lang)
@@ -90,7 +89,7 @@ json += "\t}\n"
 json += "}\n"
 
     #scores[lang] = lang_scores
-with open("outputs/test.json", "w") as text_file:
+with open(config["SUM_DIR"] + "scores.json", "w") as text_file:
     text_file.write(json)
 
 """

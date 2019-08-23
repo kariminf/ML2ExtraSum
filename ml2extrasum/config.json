@@ -1,3 +1,16 @@
 {
-  "STATS_DIR": "/home/kariminf/Data/ATS/Mss15Test/stats/"
+  "TRAIN_DIR": "/home/kariminf/Data/ATS/Mss15Train/stats/",
+  "TEST_DIR": "/home/kariminf/Data/ATS/Mss15Test/stats/",
+  "MOD_DIR": "./outputs/",
+  "MOD_NAME": "pure50it",
+
+  "SIZE_DIR": "/home/kariminf/Data/ATS/Mss15Test/src/target-length/",
+  "SUM_DIR": "/home/kariminf/Data/ATS/Mss15Test/tests/testing2018/",
+  "REF_DIR": "/home/kariminf/Data/ATS/Mss15Test/model/",
+
+  "TRAIN_ITER": 50,
+  "LEARNING_RATE": 0.05,
+  "StatNet": "norm",
+  "PLOT": [ "ar", "cs", "de", "el", "en", "es", "fa", "fi", "fr", "he", "it", "ja", "pt", "ru", "zh"],
+  "EXT": "-2018"
 }

@@ -28,14 +28,11 @@ from modeling.stat_net_norm import StatNet
 #from modeling.stat_net_pure import StatNet
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
-
+from utils import get_config
+config = get_config()
 
 def repeat_vector(vector, nbr):
     return [vector] * nbr
-
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Train/stats/"
-TRAIN_ITER = 50
-LEARNING_RATE = 0.05
 
 # by default:
 # ===========
@@ -46,12 +43,12 @@ LEARNING_RATE = 0.05
 # opt_fct=tf.train.AdamOptimizer
 # opt_fct=tf.train.AdagradOptimizer
 # cost_fct=tf.losses.sigmoid_cross_entropy
-model = StatNet(learn_rate=LEARNING_RATE)
+model = StatNet(learn_rate=config["LEARNING_RATE"])
 
-reader = LimitedReader(STATS_DIR)
+reader = LimitedReader(config["TRAIN_DIR"])
 
 sess = model.get_session()
-writer = tf.summary.FileWriter("outputs", sess.graph)
+writer = tf.summary.FileWriter(config["MOD_DIR"], sess.graph)
 
 def language_train(lang):
     cst = 0.0
@@ -64,11 +61,11 @@ def language_train(lang):
         cst = model.train(doc_data)
     return cst
 
-for epoch in range(TRAIN_ITER):
-    for lang in os.listdir(STATS_DIR):
-        lang_url = os.path.join(STATS_DIR, lang)
+for epoch in range(config["TRAIN_ITER"]):
+    for lang in os.listdir(config["TRAIN_DIR"]):
+        lang_url = os.path.join(config["TRAIN_DIR"], lang)
         if os.path.isdir(lang_url):
             cst = language_train(lang)
             print "epoch-", epoch, ".", lang, " ==> cost: ", cst
 writer.close()
-model.save("outputs/stat0m")
+model.save(config["MOD_DIR"] + config["MOD_NAME"])

@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.markers import MarkerStyle
 from numpy.random import rand
 import json, os
+from utils import get_config
+config = get_config()
 
 def get_lang_scores(lang_data):
     X = []
@@ -34,34 +36,15 @@ colors = [
 
 markers = [
 'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
-#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
-#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
-#'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X'
+'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
+'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X',
+'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'h', 'H', 'D', 'd', 'P', 'X'
 ]
 
-langs = [
-"ar",
-"cs",
-"de",
-"el",
-"en",
-"es",
-"fa",
-"fi",
-"fr",
-"he",
-"it",
-"ja",
-"pt",
-"ru",
-"zh"
-]
 
-path = os.path.join("./outputs/", "test.json")
+path = os.path.join(config["SUM_DIR"], "scores.json")
 
 cont = json.load(open(path))
-
-i = 0
 
 fig, ax = plt.subplots()
 
@@ -72,8 +55,11 @@ for lang in cont:
     i += 1
 """
 
-for i in range(15):
-    lang = langs[i]
+langs = config["PLOT"]
+
+i = 0
+for lang in langs:
+    #lang = langs[i]
     X, Y = get_lang_scores(cont[lang])
     #ax.scatter(X, Y, label=lang, marker=markers[i], facecolors="none", edgecolors=colors[i])
     scale = [50] * 30

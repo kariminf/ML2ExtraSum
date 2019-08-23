@@ -20,16 +20,17 @@
 #
 
 import os
+import utils
 
-PEER_DIR = "/home/kariminf/Data/ATS/Mss15Test/tests/testing2018/"
-MODEL_DIR = "/home/kariminf/Data/ATS/Mss15Test/model/"
+config = utils.get_config()
+
 SCORE = ["sent", "tf", "sim", "pos", "size", "rouge1", "sums"]
 EXTR = ["plain", "sim"]
 
 
-for lang in os.listdir(PEER_DIR):
-    lang_url = os.path.join(PEER_DIR, lang)
-    if os.path.isdir(lang_url):
+for lang in os.listdir(config["SUM_DIR"]):
+    lang_url = os.path.join(config["SUM_DIR"], lang)
+    if os.path.isdir(lang_url) and not lang.startswith("_"):
         print lang
         xmlcontent = "<ROUGE-EVAL version=\"1.0\">\n"
         for doc in os.listdir(lang_url):
@@ -37,10 +38,10 @@ for lang in os.listdir(PEER_DIR):
             if os.path.isdir(doc_url):
                 xmlcontent += "<EVAL ID=\"" + doc + "\">\n"
                 xmlcontent += "<PEER-ROOT>\n"
-                xmlcontent += PEER_DIR + lang + "/" + doc + "\n"
+                xmlcontent += config["SUM_DIR"] + lang + "/" + doc + "\n"
                 xmlcontent += "</PEER-ROOT>\n"
                 xmlcontent += "<MODEL-ROOT>\n"
-                xmlcontent += MODEL_DIR + lang + "\n"
+                xmlcontent += config["REF_DIR"] + lang + "\n"
                 xmlcontent += "</MODEL-ROOT>\n"
                 xmlcontent += "<INPUT-FORMAT TYPE=\"SPL\">\n"
                 xmlcontent += "</INPUT-FORMAT>\n"
@@ -56,5 +57,5 @@ for lang in os.listdir(PEER_DIR):
                 xmlcontent += "</EVAL>\n"
         xmlcontent += "</ROUGE-EVAL>"
 
-        with open(PEER_DIR + lang + "-2018.xml", "w") as f:
+        with open(config["SUM_DIR"] + lang + config["EXT"] + ".xml", "w") as f:
             f.write(xmlcontent)

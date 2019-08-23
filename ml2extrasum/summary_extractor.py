@@ -25,15 +25,13 @@ import numpy as np
 import codecs
 from extracting.extractor import Extractor
 from extracting.sim_extractor import SimExtractor
-
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
-SIZE_DIR = "/home/kariminf/Data/ATS/Mss15Test/src/target-length/"
-DEST_DIR = "/home/kariminf/Data/ATS/Mss15Test/tests/testing2018/"
+from utils import get_config
+config = get_config()
 
 def get_sentences(lang, doc):
-    path = os.path.join(STATS_DIR, lang, doc, "sents.json")
+    path = os.path.join(config["TEST_DIR"], lang, doc, "sents.json")
     cont = json.load(open(path))
-    path = os.path.join(STATS_DIR, lang, doc, "sentRouge1.json")
+    path = os.path.join(config["TEST_DIR"], lang, doc, "sentRouge1.json")
     rouge1_cont = json.load(open(path))
 
     sentences = []
@@ -43,12 +41,12 @@ def get_sentences(lang, doc):
         sentences.append(cont[num])
         rouge1.append(rouge1_cont[num])
         sent_ids.append(num)
-    path = os.path.join(STATS_DIR, lang, doc, "sentSimZ.json")
+    path = os.path.join(config["TEST_DIR"], lang, doc, "sentSimZ.json")
     sims = json.load(open(path))
     return sent_ids, sentences, sims, rouge1
 
 def get_summary_sizes(lang):
-    path = os.path.join(SIZE_DIR, lang + ".txt")
+    path = os.path.join(config["SIZE_DIR"], lang + ".txt")
     sizes = {}
     file = open(path, 'r')
     while 1:
@@ -63,14 +61,14 @@ def get_summary_sizes(lang):
 def write_summary(extractor, size, lang, doc, name):
     sents = extractor.extract_n_chars(size)
     summary = "\n".join(sents)
-    path = os.path.join(DEST_DIR, lang, doc)
+    path = os.path.join(config["SUM_DIR"], lang, doc)
     if not os.path.exists(path):
         os.makedirs(path)
     path = os.path.join(path, name + ".txt")
     with codecs.open(path, "w", "utf8") as text_file:
         text_file.write(summary)
 
-path = os.path.join("./outputs/", "test.json")
+path = os.path.join(config["SUM_DIR"], "scores.json")
 
 cont = json.load(open(path))
 

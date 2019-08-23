@@ -22,8 +22,7 @@
 import os
 import json
 import numpy as np
-
-STATS_DIR = "/home/kariminf/Data/ATS/Mss15Test/stats/"
+from utils import get_config
 
 def extract_vec(cont):
     rouge_vec = []
@@ -36,7 +35,9 @@ def extract_vec(cont):
 
 csv = "lang, min, mean, max\n"
 
-path = os.path.join("./outputs/", "test.json")
+config = get_config()
+
+path = os.path.join(config["SUM_DIR"], "scores.json")
 
 cont = json.load(open(path))
 
@@ -48,7 +49,7 @@ for lang in cont:
     errors[lang] = []
     print lang
     for doc in lang_data:
-        rouge1_path = os.path.join(STATS_DIR, lang, doc, "sentRouge1.json")
+        rouge1_path = os.path.join(config["TEST_DIR"], lang, doc, "sentRouge1.json")
         rouge1_expected = extract_vec(json.load(open(rouge1_path)))
         rouge1_infered = cont[lang][doc]["sent"]
         # mean squared error
@@ -57,7 +58,7 @@ for lang in cont:
     csv += lang + "," + str(np.min(errors[lang])) + "," + str(np.mean(errors[lang])) + "," + str(np.max(errors[lang])) + "\n"
 
 
-with open("outputs/errors.csv", "w") as text_file:
+with open(config["SUM_DIR"] + "errors.csv", "w") as text_file:
     text_file.write(csv)
 
 """
