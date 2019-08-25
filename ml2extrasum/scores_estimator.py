@@ -34,7 +34,9 @@ config = utils.get_config()
 def repeat_vector(vector, nbr):
     return [vector] * nbr
 
-model = utils.new_model(config["StatNet"])
+MODEL = utils.get_model(config["StatNet"])
+
+model = MODEL()
 
 model.restore(config["MOD_DIR"] + config["MOD_NAME"])
 

@@ -10,7 +10,7 @@
 
   "TRAIN_ITER": 50,
   "LEARNING_RATE": 0.05,
-  "StatNet": "norm",
+  "StatNet": "pure",
   "PLOT": [ "ar", "cs", "de", "el", "en", "es", "fa", "fi", "fr", "he", "it", "ja", "pt", "ru", "zh"],
   "EXT": "-2018"
 }

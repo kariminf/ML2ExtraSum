@@ -22,14 +22,11 @@
 import os
 import numpy
 import tensorflow as tf
-#from modeling.stat_net_pure import StatNet
-#from modeling.stat_net_pure import StatNet
-from modeling.stat_net_norm import StatNet
-#from modeling.stat_net_pure import StatNet
+
 #from reading.reader import Reader
 from reading.limited_reader import LimitedReader
-from utils import get_config
-config = get_config()
+import utils
+config = utils.get_config()
 
 def repeat_vector(vector, nbr):
     return [vector] * nbr
@@ -43,7 +40,10 @@ def repeat_vector(vector, nbr):
 # opt_fct=tf.train.AdamOptimizer
 # opt_fct=tf.train.AdagradOptimizer
 # cost_fct=tf.losses.sigmoid_cross_entropy
-model = StatNet(learn_rate=config["LEARNING_RATE"])
+#model = StatNet(learn_rate=config["LEARNING_RATE"])
+MODEL = utils.get_model(config["StatNet"])
+
+model = MODEL(learn_rate=config["LEARNING_RATE"])
 
 reader = LimitedReader(config["TRAIN_DIR"])
 

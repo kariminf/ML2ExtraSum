@@ -43,7 +43,7 @@ def get_sentence_scorer(name, lang, tfreq, sim, size, pos):
     graph.add_input(sim)
     graph.add_input(size)
     graph.add_input(pos)
-    graph.add_hidden(50, HIDDEN_ACT)#.add_hidden(5, HIDDEN_ACT) # 2 hidden layers
+    graph.add_hidden(50, HIDDEN_ACT).add_hidden(20, HIDDEN_ACT) # 2 hidden layers
     graph.add_output(1, tf.nn.sigmoid)
     return graph.get_output()
 

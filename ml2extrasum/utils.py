@@ -31,7 +31,7 @@ CONFIG = "config.json"
 MODELING = {
     "basic": lambda: SBasic,
     "filter": lambda: SFilter,
-    "norm": lambda: SNorm(),
+    "norm": lambda: SNorm,
     "pure": lambda: SPure
 }
 
@@ -39,6 +39,7 @@ def get_config():
     path = os.path.join("./", CONFIG)
     return json.load(open(path))
 
-def new_model(name):
+def get_model(name):
     func = MODELING.get(name, lambda: SBasic)
+    print name + " model has been chosen"
     return func()
